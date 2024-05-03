@@ -7,15 +7,9 @@ import {
   EventEmitter,
   Output,
   inject,
-  signal,
 } from '@angular/core';
 import * as L from 'leaflet';
-import 'leaflet-routing-machine';
-import { parse, stringify } from './wkt';
 import { Subject } from 'rxjs';
-import { Geolocation } from '@capacitor/geolocation';
-import { customRouter } from './openrouteserver-route-adaptation';
-
 
 @Component({
   selector: 'app-map',
@@ -60,15 +54,36 @@ export class MapComponent implements AfterViewInit {
     );
     MapComponent.mapCreated$.next();
 
-    // TODO: url needs to be configured !!!!
-    L.Routing.control({
-      router: L.Routing.osrmv1(customRouter as any),
-      waypoints: [
-        L.latLng(8.681495, 49.41461), // start point
-        L.latLng(8.687872, 49.420318) // end point
-      ],
-      routeWhileDragging: true
-    }).addTo(this.mapReference);
+    // // TODO: url needs to be configured !!!!
+    // L.Routing.control({
+    //   router: customRouter(),
+    //   waypoints: [
+    //     L.latLng(8.681495, 49.41461), // start point
+    //     L.latLng(8.687872, 49.420318) // end point
+    //   ],
+    //   // router: L.routing.osrmv1({
+    //   //   serviceUrl: 'http://localhost:3000/api/geo',
+    //   // }),
+    //   routeWhileDragging: true
+    // }).addTo(this.mapReference);
+    const orsAPI = 'http://localhost:8080/ors/v2/directions/driving-car';
+    const start = '8.681495,49.41461'; // start point
+    const end = '8.687872,49.420318'; // end point
+    const requestUrl = orsAPI + '?start=' + start + '&end=' + end;
+
+    fetch(requestUrl)
+      .then(response => response.json())
+      .then(data => {
+        const orsRoute = data.features[0];
+        const coordinates = orsRoute.geometry.coordinates.map((c: any) => [c[1], c[0]]);
+        this.displayRoute(coordinates);
+      });
+  }
+
+  displayRoute(coordinates: any) {
+    if (!this.mapReference) return;
+    const polyline = L.polyline(coordinates, { color: 'red' }).addTo(this.mapReference);
+    this.mapReference.fitBounds(polyline.getBounds());
   }
 
   // navigateToCurrentLocation() {

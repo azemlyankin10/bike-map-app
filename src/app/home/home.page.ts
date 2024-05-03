@@ -23,9 +23,9 @@ export class HomePage implements OnInit {
         // this.map.getCurrentLocation()
       })
 
-      this.getApi.getDirection().subscribe((res: any) => {
-        console.log(res, 'dadfasdfads')
-      })
+      // this.getApi.getDirection().subscribe((res: any) => {
+      //   console.log(res, 'dadfasdfads')
+      // })
   }
 
 }

@@ -38,8 +38,8 @@
 @import '@ionic/angular/css/palettes/dark.system.css';
 
 
-@import "~leaflet/dist/leaflet.css";
-
+@import "leaflet/dist/leaflet.css";
+@import 'leaflet-routing-machine/dist/leaflet-routing-machine.css';
 
 @tailwind base;
 @tailwind components;

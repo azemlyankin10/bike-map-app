@@ -6,6 +6,7 @@ import { BehaviorSubject } from 'rxjs';
 })
 export class AppStateService {
   isBottomSheetOpen$ = new BehaviorSubject<boolean>(false);
+  // isSearchMode$ = new BehaviorSubject<boolean>(false);
 
   constructor() { }
 

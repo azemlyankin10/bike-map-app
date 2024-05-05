@@ -10,6 +10,8 @@ import {
 } from '@angular/core';
 import * as L from 'leaflet';
 import { Subject } from 'rxjs';
+import { MapService } from 'src/app/_services/map.service';
+import * as polyline from '@mapbox/polyline';
 
 @Component({
   selector: 'app-map',
@@ -24,12 +26,13 @@ import { Subject } from 'rxjs';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MapComponent implements AfterViewInit {
-  @Output() navigateToCurrentLocationClicked = new EventEmitter<void>();
+  // @Output() navigateToCurrentLocationClicked = new EventEmitter<void>();
   private hostRef = inject(ElementRef);
-  public mapReference: L.Map | null = null;
+  private mapService = inject(MapService);
+  mapReference: L.Map | null = null;
   // static leaflet = L;
   // isLoading = signal(false);
-  static mapCreated$ = new Subject<void>()
+  // static mapCreated$ = new Subject<void>()
   // currentLocationMarker: L.Marker | null = null;
 
   // changeLoadingStatus(status: boolean) {
@@ -52,35 +55,32 @@ export class MapComponent implements AfterViewInit {
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(
       this.mapReference
     );
-    MapComponent.mapCreated$.next();
+    this.mapService.mapCreated$.next(this);
+    // setTimeout(() => {
+    //   this.mapReference?.invalidateSize();
+    // }, 5000);
+    // MapComponent.mapCreated$.next();
+    // this.mapService.mapReference = this;
 
-    // // TODO: url needs to be configured !!!!
-    // L.Routing.control({
-    //   router: customRouter(),
-    //   waypoints: [
-    //     L.latLng(8.681495, 49.41461), // start point
-    //     L.latLng(8.687872, 49.420318) // end point
-    //   ],
-    //   // router: L.routing.osrmv1({
-    //   //   serviceUrl: 'http://localhost:3000/api/geo',
-    //   // }),
-    //   routeWhileDragging: true
-    // }).addTo(this.mapReference);
-    const orsAPI = 'http://localhost:8080/ors/v2/directions/driving-car';
-    const start = '8.681495,49.41461'; // start point
-    const end = '8.687872,49.420318'; // end point
-    const requestUrl = orsAPI + '?start=' + start + '&end=' + end;
+    // const orsAPI = 'http://localhost:8080/ors/v2/directions/driving-car';
+    // const start = '8.681495,49.41461'; // start point
+    // const end = '8.687872,49.420318'; // end point
+    // const requestUrl = orsAPI + '?start=' + start + '&end=' + end;
 
-    fetch(requestUrl)
-      .then(response => response.json())
-      .then(data => {
-        const orsRoute = data.features[0];
-        const coordinates = orsRoute.geometry.coordinates.map((c: any) => [c[1], c[0]]);
-        this.displayRoute(coordinates);
-      });
+    // fetch(requestUrl)
+    //   .then(response => response.json())
+    //   .then(data => {
+    //     const orsRoute = data.features[0];
+    //     const coordinates = orsRoute.geometry.coordinates.map((c: any) => [c[1], c[0]]);
+    //     this.displayRoute(coordinates);
+    //   });
   }
 
-  displayRoute(coordinates: any) {
+  decodePolyline(polylineString: string) {
+    return polyline.decode(polylineString).map((c: any) => [c[0], c[1]]);
+  }
+
+  displayPolyline(coordinates: any) {
     if (!this.mapReference) return;
     const polyline = L.polyline(coordinates, { color: 'red' }).addTo(this.mapReference);
     this.mapReference.fitBounds(polyline.getBounds());

@@ -1,11 +1,20 @@
 import { Injectable } from '@angular/core';
 import { Position, Geolocation } from '@capacitor/geolocation';
-import { Observable } from 'rxjs';
+import { Observable, Subject } from 'rxjs';
+import { MapComponent } from '../components/map/map.component';
 
 @Injectable({
   providedIn: 'root'
 })
 export class MapService {
+  public _mapComponentReference: MapComponent | null = null; // available after the map is created
+  mapCreated$ = new Subject<MapComponent>();
+
+  constructor() {
+    this.mapCreated$.subscribe((mapComponent) => {
+      this._mapComponentReference = mapComponent;
+    });
+  }
 
   subscribeToCurrentLocation$() {
     let watchId: string;
@@ -20,6 +29,14 @@ export class MapService {
 
       return () => Geolocation.clearWatch({ id: watchId });
     });
+  }
+
+  displayRoute(geometryLine: string) {
+    const decoded = this._mapComponentReference?.decodePolyline(geometryLine);
+    this._mapComponentReference?.displayPolyline(decoded);
+
+
+
   }
 }
 

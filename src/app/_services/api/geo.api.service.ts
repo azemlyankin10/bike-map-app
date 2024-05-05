@@ -11,7 +11,10 @@ export class GeoApiService {
   constructor(private http: HttpClient) { }
 
   getDirection() {
-    return this.http.get(`${this.apiUrl}/geo`);
+    return this.http.post(`${this.apiUrl}/geo/driving-car`, {
+      coordinates: [[8.681495,49.41461]],
+      options: { round_trip: { length: 1000 } }
+    });
   }
 
 }

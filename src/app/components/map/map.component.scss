@@ -10,12 +10,3 @@
 .map {
   @apply tw-w-full tw-h-full;
 }
-
-.controls-wrapper {
-  @apply tw-flex tw-flex-col tw-gap-2 tw-justify-center tw-items-center tw-shadow-md tw-p-2;
-  background-color: rgba(255, 255, 255, 0.766);
-}
-
-.control-btn {
-  @apply tw-p-2 tw-rounded-md tw-shadow-md hover:tw-shadow-xl tw-text-xl tw-flex tw-justify-center tw-items-center tw-bg-white tw-cursor-pointer;
-}

@@ -1,7 +1,11 @@
 import { CommonModule } from '@angular/common';
 import { AfterViewInit, ChangeDetectionStrategy, Component, ElementRef, Input, OnInit, inject } from '@angular/core';
+import { Keyboard } from '@capacitor/keyboard';
+import { Haptics, ImpactStyle } from '@capacitor/haptics';
+import { Capacitor } from '@capacitor/core';
 import { GestureController } from '@ionic/angular';
 import { AppStateService } from 'src/app/_services/app-state.service';
+import { distinctUntilChanged } from 'rxjs';
 
 @Component({
   selector: 'app-bottom-sheet',
@@ -39,7 +43,11 @@ export class BottomSheetComponent implements AfterViewInit, OnInit {
   }
 
   ngOnInit() {
-    this.appState.isBottomSheetOpen$.subscribe(isOpen => {
+    this.appState.isBottomSheetOpen$.pipe(distinctUntilChanged()).subscribe(isOpen => {
+      if (Capacitor.getPlatform() !== 'web') {
+        isOpen ? Keyboard.show() : Keyboard.hide()
+        Haptics.impact({ style: ImpactStyle.Light });
+      }
       isOpen ? this.hostRef.nativeElement.classList.add('open') : this.hostRef.nativeElement.classList.remove('open');
     })
   }

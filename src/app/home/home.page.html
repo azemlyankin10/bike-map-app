@@ -1,4 +1,32 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-segment [value]="selectedMode()" (ionChange)="modeChanged($event.detail.value ?? '')">
+      <ion-segment-button value="default">
+        <ion-label>Default</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="roundLoop">
+        <ion-label>Round loop</ion-label>
+      </ion-segment-button>
+    </ion-segment>
+  </ion-toolbar>
+</ion-header>
+
+<div class="ion-padding">
+  @switch (selectedMode()) {
+    @case ('default') {
+      <ion-searchbar animated="true" placeholder="Find location" show-clear-button="focus" />
+    }
+    @case('roundLoop') {
+      <app-round-trip-controls />
+    }
+  }
+</div>
+
 <app-map #map class="tw-z-10 tw-w-full tw-h-full" />
+
+<div class="tw-absolute tw-bottom-0 tw-left-1/2 -tw-translate-x-1/2 tw-z-20" style="background: var(--ion-color-light);">
+  fafafdaffafsdg
+</div>
 
 <!-- @if (isShowSearchMode()) { -->
   <!-- <app-bottom-sheet>

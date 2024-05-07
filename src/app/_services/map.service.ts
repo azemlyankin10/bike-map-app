@@ -1,12 +1,14 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Position, Geolocation } from '@capacitor/geolocation';
-import { Observable, Subject } from 'rxjs';
+import { Observable, Subject, from, shareReplay, switchMap } from 'rxjs';
 import { MapComponent } from '../components/map/map.component';
+import { GeoApiService } from './api/geo.api.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class MapService {
+  geoApi = inject(GeoApiService);
   public _mapComponentReference: MapComponent | null = null; // available after the map is created
   mapCreated$ = new Subject<MapComponent>();
 
@@ -34,9 +36,10 @@ export class MapService {
   displayRoute(geometryLine: string) {
     const decoded = this._mapComponentReference?.decodePolyline(geometryLine);
     this._mapComponentReference?.displayPolyline(decoded);
+  }
 
-
-
+  generateRoundTrip() {
+    return from(Geolocation.getCurrentPosition()).pipe(shareReplay(1), switchMap(position => this.geoApi.getDirection([[position.coords.longitude, position.coords.latitude]])))
   }
 }
 

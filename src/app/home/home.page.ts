@@ -44,7 +44,7 @@ export class HomePage implements OnInit, ViewDidEnter {
       // })
 console.log('home page');
 
-      this.getApi.getDirection().subscribe((res: any) => {
+      this.mapService.generateRoundTrip().subscribe((res: any) => {
         console.log(res, 'dadfasdfads')
         this.mapService.displayRoute(res.routes[0].geometry)
 

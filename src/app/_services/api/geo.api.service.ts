@@ -10,11 +10,12 @@ export class GeoApiService {
 
   constructor(private http: HttpClient) { }
 
-  getDirection() {
-    return this.http.post(`${this.apiUrl}/geo/cycling-mountain`, {
-      coordinates: [[8.681495,49.41461]],
-      options: { round_trip: { length: 1000 } }  //points: 20, seed: 2
+  getDirection(coordinates: [number, number][]) {
+    return this.http.post(`${this.apiUrl}/geo/cycling-road`, {
+      coordinates,
+      options: { round_trip: { length: 5000 } }  //points: 20, seed: 2
     });
   }
 
 }
+// [4.3917,51.2192]

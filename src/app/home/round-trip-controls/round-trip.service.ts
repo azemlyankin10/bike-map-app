@@ -1,16 +1,18 @@
 import { Injectable, TemplateRef, signal } from '@angular/core';
-import { BehaviorSubject, Subject, debounceTime, from, map, switchMap, tap } from 'rxjs';
+import { BehaviorSubject, Subject, catchError, debounceTime, from, map, of, switchMap, tap } from 'rxjs';
 import { GeoApiService, TDirectionApiOptions } from 'src/app/_services/api/geo.api.service';
-import { Position, Geolocation } from '@capacitor/geolocation';
+import { Geolocation } from '@capacitor/geolocation';
 import { MapService } from 'src/app/_services/map.service';
 import { Marker, Polyline, icon, marker } from 'leaflet';
 import { getRandomNumber } from 'src/app/helpers/functions/getRandomNumber';
+import { ToastController } from '@ionic/angular';
 
 @Injectable({
   providedIn: 'root'
 })
 export class RoundTripService {
-  constructor(private geoApi: GeoApiService, private mapService: MapService) {
+  isSaveRouteVisible$ = new BehaviorSubject<boolean>(false)
+  constructor(private geoApi: GeoApiService, private mapService: MapService, private toastController: ToastController) {
     this.initGeneratingRoute()
     this.initInstructions()
   }
@@ -18,11 +20,12 @@ export class RoundTripService {
    * Shared components
    */
   routeInfoComponent = new BehaviorSubject<TemplateRef<any> | null>(null);
+  routeTopToolbar = new BehaviorSubject<TemplateRef<any> | null>(null);
   /**
    * Route
    */
   private generateRoute$ = new Subject<TDirectionApiOptions['round_trip']>();
-  isRefreshingRoute = signal(false);
+  isRefreshingRoute$ = new BehaviorSubject<boolean>(false)
   routeRef!: { polyline: Polyline<any> | undefined, polylineDecorator: any };
   routeObj!: any;
   routeOptions = {
@@ -38,31 +41,46 @@ export class RoundTripService {
   private initGeneratingRoute() {
     this.generateRoute$.pipe(
       debounceTime(700),
+      tap(() => this.isRefreshingRoute$.next(true)),
       map(payload => ({ round_trip: { ...payload, length: payload.length * 1000 } })),
-      switchMap(payload => this.generateRoundTrip(payload)),
-      tap(() => this.isRefreshingRoute.set(false)),
+      switchMap(payload => this.generateRoundTrip(payload).pipe(
+        catchError(e => {
+          console.error(e, 'Failed to generate route');
+          this.toastController.create({
+            message: 'Failed to generate route',
+            duration: 10000,
+            position: 'top',
+            buttons: [{ text: 'Close', role: 'cancel' }],
+            mode: 'ios'
+          }).then(toast => toast.present())
+          return of(null)
+        })
+      )),
     ).subscribe((res: any) => {
-      console.log(res, 'res');
-      this.routeObj = res.routes[0]
-      const { distance, duration } = this.routeObj.summary
-      this.routeProperties.set({ distance, duration })
-      if (this.routeRef) {
-        this.routeRef?.polyline?.remove()
-        this.routeRef?.polylineDecorator?.remove()
-      }
-      this.routeRef = this.mapService.displayRoute(this.routeObj.geometry)
-    })
+        this.isRefreshingRoute$.next(false)
+        if (!res) return;
+        console.log(res, 'res');
+        this.routeObj = res.routes[0]
+        const { distance, duration } = this.routeObj.summary
+        this.routeProperties.set({ distance, duration })
+        if (this.routeRef) {
+          this.routeRef?.polyline?.remove()
+          this.routeRef?.polylineDecorator?.remove()
+        }
+        this.routeRef = this.mapService.displayRoute(this.routeObj.geometry)
+      })
   }
 
   generateRoundTrip(options: TDirectionApiOptions) {
     return from(Geolocation.getCurrentPosition()).pipe(
+      tap(position => console.log(position, 'position')),
       switchMap(position => this.geoApi.getDirection([[position.coords.longitude, position.coords.latitude]], options))
     )
   }
 
   refreshRoundTrip() {
     this.routeOptions.seed = getRandomNumber(0, 90)
-    this.isRefreshingRoute.set(true)
+    // this.isRefreshingRoute.set(true)
     this.generateRoute$.next(this.routeOptions)
   }
 

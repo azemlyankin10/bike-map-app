@@ -45,7 +45,7 @@ import { RoundTripControlsComponent } from 'src/app/home/round-trip-controls/rou
       <app-round-trip-controls />
     </app-bottom-sheet>
   `,
-  styleUrl: './nav-tabs.component.css',
+  styleUrl: './nav-tabs.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class NavTabsComponent {

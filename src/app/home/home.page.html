@@ -28,7 +28,11 @@
       </div>
     } -->
   </ion-toolbar>
+  @if (appStateMode() === 'round-trip') {
+    <ng-container *ngTemplateOutlet="roundTripService.routeTopToolbar | async" />
+  }
 </ion-header>
+
 
 <!-- <div class="ion-padding">
   @switch (selectedMode()) {

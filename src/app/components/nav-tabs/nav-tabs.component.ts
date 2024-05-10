@@ -20,7 +20,7 @@ import { RoundTripControlsComponent } from 'src/app/home/round-trip-controls/rou
           <ion-icon name="map-outline" aria-hidden="true" />
           <ion-label>Map</ion-label>
         </ion-tab-button>
-        <ion-tab-button (click)="bs.open()">
+        <ion-tab-button (click)="bs.open(); appState.appState$.next('round-trip')">
           <ion-icon name="sync-circle-outline" aria-hidden="true" />
           <ion-label>Round trip</ion-label>
         </ion-tab-button>
@@ -40,7 +40,7 @@ import { RoundTripControlsComponent } from 'src/app/home/round-trip-controls/rou
     <!-- } -->
     </ion-tabs>
 
-    <app-bottom-sheet #bs mode="small">
+    <app-bottom-sheet #bs mode="small" (closeSheet)="appState.appState$.next('default')">
       <!-- <ion-searchbar animated="true" placeholder="Find location" mode="ios" show-clear-button="focus" /> -->
       <app-round-trip-controls />
     </app-bottom-sheet>

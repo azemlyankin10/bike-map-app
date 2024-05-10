@@ -12,6 +12,10 @@ import * as L from 'leaflet';
 import { Subject } from 'rxjs';
 import { MapService } from 'src/app/_services/map.service';
 import * as polyline from '@mapbox/polyline';
+import { Position, Geolocation } from '@capacitor/geolocation';
+import '@ansur/leaflet-pulse-icon/dist/L.Icon.Pulse.js';
+import '@ansur/leaflet-pulse-icon/dist/L.Icon.Pulse.css';
+import 'leaflet-polylinedecorator';
 
 @Component({
   selector: 'app-map',
@@ -56,6 +60,7 @@ export class MapComponent implements AfterViewInit {
       this.mapReference
     );
     this.mapService.mapCreated$.next(this);
+
     // setTimeout(() => {
     //   this.mapReference?.invalidateSize();
     // }, 5000);
@@ -84,6 +89,16 @@ export class MapComponent implements AfterViewInit {
     if (!this.mapReference) return;
     const polyline = L.polyline(coordinates, { color: 'red' }).addTo(this.mapReference);
     this.mapReference.fitBounds(polyline.getBounds());
+    return polyline;
+  }
+
+  addPolylineDecorator(polyline: any) {
+    const l = L as any
+    return l.polylineDecorator(polyline, {
+      patterns: [
+        { offset: 0, repeat: 80, symbol: l.Symbol.arrowHead({ pixelSize: 5, polygon: false, pathOptions: { stroke: true, color: '#000000' } }) }
+      ]
+    })
   }
 
   // navigateToCurrentLocation() {
@@ -179,3 +194,11 @@ const lineStyle = {
   weight: 5,
   opacity: 0.65,
 };
+
+
+export const myLocationPulsingIcon = (L.icon as any).pulse({
+  iconSize:[20,20],
+  color:'#4e8cff',
+  fillColor: '#3B7FFC',
+  heartbeat: 2
+});

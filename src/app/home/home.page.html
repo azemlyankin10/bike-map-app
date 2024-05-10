@@ -1,5 +1,5 @@
-<ion-header>
-  <ion-toolbar>
+<ion-header class="tw-fixed tw-top-0 tw-left-0 tw-right-0 tw-z-20 tw-shadow-none tw-border-none">
+  <!-- <ion-toolbar>
     <ion-segment [value]="selectedMode()" (ionChange)="modeChanged($event.detail.value ?? '')">
       <ion-segment-button value="default">
         <ion-label>Default</ion-label>
@@ -8,6 +8,25 @@
         <ion-label>Round loop</ion-label>
       </ion-segment-button>
     </ion-segment>
+  </ion-toolbar> -->
+  <ion-toolbar [ngStyle]="{ '--background': appStateMode() === 'default' ? 'transparent' : '#374151'}">
+    @switch (appStateMode()) {
+      @case ('default') {
+        <div class="tw-pt-3">
+          <ion-searchbar animated="true" placeholder="Find location" show-clear-button="focus" mode="ios" class="tw-pt-2" style="--background: #374151;" />
+        </div>
+      }
+      @case ('round-trip') {
+        <ng-container *ngTemplateOutlet="roundTripService.routeInfoComponent | async" />
+      }
+    }
+    <!-- @if (roundTripService.routeInfoComponent | async) {
+      <ng-container *ngTemplateOutlet="roundTripService.routeInfoComponent | async" />
+    } @else {
+      <div class="tw-pt-3">
+        <ion-searchbar animated="true" placeholder="Find location" show-clear-button="focus" mode="ios" class="tw-pt-2" style="--background: #374151;" />
+      </div>
+    } -->
   </ion-toolbar>
 </ion-header>
 

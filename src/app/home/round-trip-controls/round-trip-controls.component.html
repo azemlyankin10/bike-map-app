@@ -1,0 +1,59 @@
+<ng-template #routeInfo>
+    <!-- <div class="tw-relative"> -->
+      <ion-grid [fixed]="true">
+        <ion-row>
+          <!-- <ion-col size="auto">1</ion-col> -->
+          <ion-col class="tw-flex tw-items-center tw-justify-center">
+            Distance: {{ roundTripService.routeProperties().distance | distance }}
+          </ion-col>
+          <ion-col class="tw-flex tw-items-center tw-justify-center">
+            Duration: {{ roundTripService.routeProperties().duration | time: { showSeconds: false } }}
+          </ion-col>
+          <ion-col size="auto">
+            <ion-button size="small" mode="ios" fill="solid" color="dark" (click)="isRouteInfoSubsectionVisible.set(!isRouteInfoSubsectionVisible())">
+              <ion-icon slot="icon-only" name="chevron-{{isRouteInfoSubsectionVisible() ? 'up' : 'down'}}-outline"/>
+            </ion-button>
+          </ion-col>
+        </ion-row>
+      </ion-grid>
+      <div [class.tw-hidden]="!isRouteInfoSubsectionVisible()">
+        <ion-list [inset]="true" mode="ios">
+          <ion-item>
+            <ion-toggle justify="space-between" [value]="roundTripService.isInstructionsVisible$ | async" (ionChange)="roundTripService.isInstructionsVisible$.next($event.detail.checked);">Show instructions</ion-toggle>
+          </ion-item>
+        </ion-list>
+      </div>
+    <!-- </div> -->
+</ng-template>
+
+<ng-template #options>
+  <h2 class="tw-font-bold tw-text-sm tw-px-3 tw-mb-2">Additional</h2>
+  <div class="tw-flex tw-items-center tw-justify-between tw-gap-3 tw-px-3">
+    <ion-range [value]="roundTripService.routeOptions.points" [min]="3" [max]="30" (ionChange)="pointsChanged($event.detail.value)" label="Points" [pin]="true" class="tw-pt-0" mode="ios"/>
+    <button class="tw-text-2xl tw-flex tw-items-center tw-justify-center active:tw-opacity-70 tw-transition-opacity" (click)="showInfoDialog()">
+      <ion-icon slot="icon-only" name="help-circle-outline" />
+    </button>
+  </div>
+</ng-template>
+
+<div class="tw-flex tw-items-center tw-justify-between tw-mb-5">
+  <h2 class="tw-font-bold tw-text-xl">Round trip configurations</h2>
+  <ion-button size="small" style="--color: var(--ion-text-color);" (click)="toggleAdditionalSection()">
+    <ion-icon slot="icon-only" name="options-outline"/>
+  </ion-button>
+</div>
+<ion-range [value]="roundTripService.routeOptions.length" (ionChange)="lengthChanged($event.detail.value)" [min]="1" label="Length" [pin]="true" class="tw-pt-0 tw-mb-3" mode="ios">
+  <p slot="end" class="tw-ml-3">100km</p>
+</ion-range>
+<div class="tw-flex tw-gap-2">
+  <ion-button size="large" mode="ios" [disabled]="false" fill="solid" color="success">
+    <ion-icon slot="icon-only" name="add-outline" class="tw-text-white"/>
+  </ion-button>
+  <ion-button size="large" mode="ios" [disabled]="roundTripService.isRefreshingRoute()" fill="solid" color="medium"  (click)="refreshClicked()">
+    <ion-icon slot="icon-only" name="refresh-outline" [class.rotate]="false" class="tw-text-white"/>
+  </ion-button>
+  <ion-button size="large" expand="block" mode="ios" style="--color: var(--ion-text-color);" [disabled]="false" class="tw-w-full">
+    <ion-icon slot="start" name="navigate-outline" />
+    Start
+  </ion-button>
+</div>

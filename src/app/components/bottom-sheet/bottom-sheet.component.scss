@@ -1,18 +1,28 @@
 :host {
-  height: calc(100vh - 4rem);
-  height: calc(100dvh - 4rem);
-  top: calc(100vh);
-  @apply tw-absolute tw-left-0 tw-right-0 tw-z-20;
-  @apply tw-bg-gray-700 tw-shadow-md tw-p-4 tw-rounded-t-3xl tw-transition-transform tw-duration-300 tw-ease-in-out;
+  @apply tw-block tw-absolute tw-left-0 tw-right-0 tw-z-20 tw-transition-transform tw-duration-300 tw-ease-in-out tw-will-change-transform;
 
-  &.small {
-    height: 40vh;
-    height: 40dvh;
-  }
+  max-height: 90vh;
+  max-height: 90dvh;
+  top: 100vh;
 
   &.open {
-    transform: translateY(-100%);
+    @apply -tw-translate-y-full;
   }
+}
+
+.mainSection {
+  // height: calc(100vh - 4rem);
+  // height: calc(100dvh - 4rem);
+
+
+  @apply tw-bg-gray-700 tw-shadow-md tw-px-4 tw-pt-3 tw-pb-4 tw-rounded-t-3xl tw-relative tw-z-10;
+
+  // &.small {
+  //   // height: 40vh;
+  //   // height: 40dvh;
+  // }
+
+
 
   &.touching {
     .button-sheet-up-line {
@@ -23,4 +33,16 @@
 
 .button-sheet-up-line {
   @apply tw-absolute tw-top-2 tw-left-1/2 tw-transform tw--translate-x-1/2 tw-w-1/3 tw-h-1 tw-bg-gray-500 tw-rounded-md tw-transition-opacity tw-duration-300 tw-ease-in-out;
+}
+
+
+.additionalSection {
+  @apply tw-hidden tw-bg-gray-600 tw-rounded-t-2xl tw-min-h-12 tw-w-11/12 tw-mx-auto tw-relative tw-bottom-[-5px] tw-p-2 tw-translate-y-full tw-transition-transform tw-duration-300 tw-ease-in-out tw-will-change-auto;
+  &.open {
+    @apply tw-translate-y-0;
+  }
+
+  &.isVisible {
+    @apply tw-block;
+  }
 }

@@ -1,3 +1,20 @@
 :host {
-  display: block;
+  @apply tw-block tw-py-3
+}
+
+// .routeInfoSubsection {
+//   @apply -tw-translate-y-10;
+// }
+
+.rotate {
+  animation: rotate 1s linear infinite;
+}
+
+@keyframes rotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }

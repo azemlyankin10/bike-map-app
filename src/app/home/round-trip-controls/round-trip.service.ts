@@ -10,11 +10,21 @@ import { getRandomNumber } from 'src/app/helpers/functions/getRandomNumber';
   providedIn: 'root'
 })
 export class RoundTripService {
+  constructor(private geoApi: GeoApiService, private mapService: MapService) {
+    this.initGeneratingRoute()
+    this.initInstructions()
+  }
+  /**
+   * Shared components
+   */
   routeInfoComponent = new BehaviorSubject<TemplateRef<any> | null>(null);
-  private generateRoute$ = new Subject<TDirectionApiOptions['round_trip']>()
-  isRefreshingRoute = signal(false)
-  routeRef!: Polyline<any> | undefined
-  routeObj!: any
+  /**
+   * Route
+   */
+  private generateRoute$ = new Subject<TDirectionApiOptions['round_trip']>();
+  isRefreshingRoute = signal(false);
+  routeRef!: { polyline: Polyline<any> | undefined, polylineDecorator: any };
+  routeObj!: any;
   routeOptions = {
     length: 5,
     points: 10,
@@ -24,9 +34,8 @@ export class RoundTripService {
     distance: 0,
     duration: 0
   })
-  isInstructionsVisible$ = new BehaviorSubject<boolean>(false)
 
-  constructor(private geoApi: GeoApiService, private mapService: MapService) {
+  private initGeneratingRoute() {
     this.generateRoute$.pipe(
       debounceTime(700),
       map(payload => ({ round_trip: { ...payload, length: payload.length * 1000 } })),
@@ -37,15 +46,11 @@ export class RoundTripService {
       this.routeObj = res.routes[0]
       const { distance, duration } = this.routeObj.summary
       this.routeProperties.set({ distance, duration })
-      if (this.routeRef) this.mapService?._mapComponentReference?.mapReference?.removeLayer(this.routeRef)
+      if (this.routeRef) {
+        this.routeRef?.polyline?.remove()
+        this.routeRef?.polylineDecorator?.remove()
+      }
       this.routeRef = this.mapService.displayRoute(this.routeObj.geometry)
-
-    })
-
-    this.isInstructionsVisible$.subscribe(isVisible => {
-      console.log(isVisible, 'isVisible');
-      if(!this.routeObj) return;
-      isVisible ? this.showInstructions() : this.removeInstructions()
     })
   }
 
@@ -69,8 +74,21 @@ export class RoundTripService {
   generateRoute() {
     this.generateRoute$.next(this.routeOptions)
   }
-
+  /**
+   * Instructions
+   */
+  isInstructionsVisible$ = new BehaviorSubject<boolean>(false)
+  private instructionIcon = icon({ iconUrl: 'assets/icons/instruction.svg', iconSize: [20, 20] })
   private instructionMarkers: Marker[] = []
+
+  private initInstructions() {
+    this.isInstructionsVisible$.subscribe(isVisible => {
+      console.log(isVisible, 'isVisible');
+      if(!this.routeObj) return;
+      isVisible ? this.showInstructions() : this.removeInstructions()
+    })
+  }
+
   private showInstructions() {
     const coordinates = this.mapService._mapComponentReference?.decodePolyline(this.routeObj.geometry);
     if (!coordinates) return;
@@ -78,16 +96,15 @@ export class RoundTripService {
     const steps = this.routeObj.segments.flatMap((segment: any) => segment.steps);
     steps.forEach((step: any) => {
       const latLng = coordinates[step.way_points[0]] as any
-      const createdMarker = marker(latLng, {icon: instructionIcon}).addTo(this.mapService._mapComponentReference?.mapReference as any);
+      const createdMarker = marker(latLng, {icon: this.instructionIcon}).addTo(this.mapService._mapComponentReference?.mapReference as any);
       createdMarker.bindPopup(`<div class="tw-flex tw-items-center tw-gap-2"><img width="40" src="assets/icons/directions/${step.type}.svg" /><b>${step.instruction}</b></div><br>${step.distance} meters`).openPopup();
       this.instructionMarkers.push(createdMarker)
     });
   }
+
   private removeInstructions() {
     this.instructionMarkers.forEach(marker => marker.remove())
     this.instructionMarkers = []
   }
 
 }
-
-const instructionIcon = icon({ iconUrl: 'assets/icons/instruction.svg', iconSize: [20, 20] })

@@ -53,7 +53,8 @@ export class MapService {
   displayRoute(geometryLine: string) {
     const decoded = this._mapComponentReference?.decodePolyline(geometryLine);
     const polyline = this._mapComponentReference?.displayPolyline(decoded);
-    return this._mapComponentReference?.addPolylineDecorator(polyline).addTo(this._mapComponentReference?.mapReference);
+    const polylineDecorator = this._mapComponentReference?.addPolylineDecorator(polyline).addTo(this._mapComponentReference?.mapReference);
+    return { polyline, polylineDecorator };
   }
 
   // setViewToMyLocation() {

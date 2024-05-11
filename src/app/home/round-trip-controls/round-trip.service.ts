@@ -6,12 +6,14 @@ import { MapService } from 'src/app/_services/map.service';
 import { Marker, Polyline, icon, marker } from 'leaflet';
 import { getRandomNumber } from 'src/app/helpers/functions/getRandomNumber';
 import { ToastController } from '@ionic/angular';
+import { IRouteResponse } from 'src/app/_models/routeResponse';
 
 @Injectable({
   providedIn: 'root'
 })
 export class RoundTripService {
   isSaveRouteVisible$ = new BehaviorSubject<boolean>(false)
+  isSavedRouteViewVisible$ = new BehaviorSubject<boolean>(false)
   constructor(private geoApi: GeoApiService, private mapService: MapService, private toastController: ToastController) {
     this.initGeneratingRoute()
     this.initInstructions()
@@ -27,7 +29,7 @@ export class RoundTripService {
   private generateRoute$ = new Subject<TDirectionApiOptions['round_trip']>();
   isRefreshingRoute$ = new BehaviorSubject<boolean>(false)
   routeRef!: { polyline: Polyline<any> | undefined, polylineDecorator: any };
-  routeObj!: any;
+  routeResponseData!: IRouteResponse | null;
   routeOptions = {
     length: 5,
     points: 10,
@@ -60,14 +62,15 @@ export class RoundTripService {
         this.isRefreshingRoute$.next(false)
         if (!res) return;
         console.log(res, 'res');
-        this.routeObj = res.routes[0]
-        const { distance, duration } = this.routeObj.summary
+        this.routeResponseData = res
+        const route = res.routes[0]
+        const { distance, duration } = route.summary
         this.routeProperties.set({ distance, duration })
         if (this.routeRef) {
           this.routeRef?.polyline?.remove()
           this.routeRef?.polylineDecorator?.remove()
         }
-        this.routeRef = this.mapService.displayRoute(this.routeObj.geometry)
+        this.routeRef = this.mapService.displayRoute(route.geometry)
       })
   }
 
@@ -102,16 +105,18 @@ export class RoundTripService {
   private initInstructions() {
     this.isInstructionsVisible$.subscribe(isVisible => {
       console.log(isVisible, 'isVisible');
-      if(!this.routeObj) return;
+      if(!this.routeResponseData?.routes[0]) return;
       isVisible ? this.showInstructions() : this.removeInstructions()
     })
   }
 
   private showInstructions() {
-    const coordinates = this.mapService._mapComponentReference?.decodePolyline(this.routeObj.geometry);
+    if (!this.routeResponseData) return;
+    const coordinates = this.mapService._mapComponentReference?.decodePolyline(this.routeResponseData.routes[0].geometry);
     if (!coordinates) return;
 
-    const steps = this.routeObj.segments.flatMap((segment: any) => segment.steps);
+    const steps = (this.routeResponseData.routes[0].segments as any)?.flatMap((segment: any) => segment.steps);
+    if (!steps) return;
     steps.forEach((step: any) => {
       const latLng = coordinates[step.way_points[0]] as any
       const createdMarker = marker(latLng, {icon: this.instructionIcon}).addTo(this.mapService._mapComponentReference?.mapReference as any);

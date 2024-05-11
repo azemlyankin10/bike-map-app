@@ -57,6 +57,7 @@ export class MapService {
     return { polyline, polylineDecorator };
   }
 
+
   // setViewToMyLocation() {
   //   Geolocation.getCurrentPosition().then(({ coords: { latitude, longitude } }) => {
   //     this._mapComponentReference?.mapReference?.setView([latitude, longitude], 13);

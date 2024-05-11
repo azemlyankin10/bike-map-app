@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output, inject } from '@angular/core';
 import { IonAlert } from '@ionic/angular/standalone';
-import { AssetsApiService } from 'src/app/_services/api/assets.api.service';
+import { RouteCollectionApiService } from 'src/app/_services/api/route-collection.api.service';
+// import { AssetsApiService } from 'src/app/_services/api/route-collection.api.service';
 
 @Component({
   selector: 'app-create-route-collection',
@@ -23,7 +24,7 @@ import { AssetsApiService } from 'src/app/_services/api/assets.api.service';
 export class CreateRouteCollectionComponent {
   @Input() isOpen = false
   @Output() isOpenChange = new EventEmitter<boolean>()
-  assetsApiService = inject(AssetsApiService)
+  routeCollectionApiService = inject(RouteCollectionApiService)
 
 
   setResult(event: any) {
@@ -31,7 +32,7 @@ export class CreateRouteCollectionComponent {
     if (data) {
       const [name] = Object.values(data.values)
       if (role === 'save' && name) {
-        this.assetsApiService.createRouteCollection(name as string).subscribe()
+        this.routeCollectionApiService.createRouteCollection(name as string).subscribe()
       }
     }
     this.isOpenChange.emit(false)

@@ -1,12 +1,13 @@
 import { AsyncPipe, NgClass } from '@angular/common';
-import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, OnInit, Output, inject, signal } from '@angular/core';
 import { IonList, IonItem, IonInput, IonSelect, IonSelectOption, IonButton, IonIcon } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { addOutline } from 'ionicons/icons';
-import { AssetsApiService, TRouteCollection } from 'src/app/_services/api/assets.api.service';
+import { IRouteCollectionList, RouteCollectionApiService } from 'src/app/_services/api/route-collection.api.service';
 import { CreateRouteCollectionComponent } from '../create-route-collection/create-route-collection.component';
 import { destroyNotifier } from 'src/app/helpers/functions/destroyNotifier';
 import { takeUntil } from 'rxjs';
+import { RoutesApiService } from 'src/app/_services/api/routes.api.service';
 
 addIcons({ addOutline })
 @Component({
@@ -31,16 +32,30 @@ addIcons({ addOutline })
     <ion-item mode="ios">
       <div class="tw-flex tw-items-center tw-justify-between tw-w-full">
         @if (routeCollections().length) {
-          <ion-select [value]="routeCollections()[0].id" (ionChange)="collection = $event.detail.value.toString()" aria-label="Route collection" placeholder="{{ (assetsApiService.isCollectionsRefreshing$ | async) ? 'Loading...' : 'Collection' }}" mode="ios" [disabled]="assetsApiService.isCollectionsRefreshing$ | async">
-            @for (collection of routeCollections(); track collection.id) {
-              <ion-select-option [value]="collection.id">{{ collection.name }}</ion-select-option>
+          <ion-select
+            [value]="collection"
+            (ionChange)="collection = $event.detail.value"
+            aria-label="Route collection"
+            placeholder="{{ (routeCollectionApiService.isCollectionsRefreshing$ | async) ? 'Loading...' : 'Collection' }}"
+            mode="ios"
+            [disabled]="(routeCollectionApiService.isCollectionsRefreshing$ | async) || (routesApiService.isLoading$ | async)"
+          >
+            @for (collection of routeCollections(); track collection._id) {
+              <ion-select-option [value]="collection._id">{{ collection.name }}</ion-select-option>
             }
           </ion-select>
           <ion-button size="small" color="light" (click)="isCreateRouteCollectionOpen = !isCreateRouteCollectionOpen">
             <ion-icon slot="icon-only" name="add-outline" />
           </ion-button>
         } @else {
-          <ion-button size="small" [color]="validations().collection ? 'light' : 'danger'" expand="full" class="tw-w-full" (click)="isCreateRouteCollectionOpen = !isCreateRouteCollectionOpen">
+          <ion-button
+            size="small"
+            [color]="validations().collection ? 'light' : 'danger'"
+            expand="full"
+            class="tw-w-full"
+            [disabled]="routeCollectionApiService.isCollectionsRefreshing$ | async"
+            (click)="isCreateRouteCollectionOpen = !isCreateRouteCollectionOpen"
+          >
             <ion-icon slot="start" name="add-outline" />
             Create collection
           </ion-button>
@@ -55,20 +70,27 @@ addIcons({ addOutline })
 })
 export class SaveRouteViewComponent implements OnInit {
   private IS_DESTROYED = destroyNotifier()
-  assetsApiService = inject(AssetsApiService)
+  routeCollectionApiService = inject(RouteCollectionApiService)
+  routesApiService = inject(RoutesApiService)
   isCreateRouteCollectionOpen = false
-  name = ''
-  collection = ''
+  name!: string
+  collection!: string
   validations = signal({ name: true, collection: true })
-  routeCollections = signal<TRouteCollection[]>([])
+  routeCollections = signal<IRouteCollectionList[]>([])
+  @Output() saveRouteClicked = new EventEmitter<{ name: string, collection: string }>()
 
   ngOnInit() {
-    this.assetsApiService.getRouteCollections$().pipe(takeUntil(this.IS_DESTROYED)).subscribe(routeCollections => { this.routeCollections.set(routeCollections ?? []) })
+    this.routeCollectionApiService.getRouteCollections$().pipe(takeUntil(this.IS_DESTROYED)).subscribe(routeCollections => {
+      if (routeCollections?.[0]) {
+        this.collection = routeCollections[0]._id
+      }
+      this.routeCollections.set(routeCollections ?? [])
+    })
   }
 
   save() {
     this.validations.set({ name: !!this.name, collection: !!this.collection })
-
-
+    if(Object.values(this.validations()).some(v => !v)) return
+    this.saveRouteClicked.emit({ name: this.name, collection: this.collection })
   }
 }

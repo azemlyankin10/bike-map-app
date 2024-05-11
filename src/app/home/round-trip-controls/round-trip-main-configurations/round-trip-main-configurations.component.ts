@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { ImpactStyle } from '@capacitor/haptics';
 import { IonButton, IonIcon, IonRange } from '@ionic/angular/standalone';
 import { BottomSheetService } from 'src/app/components/bottom-sheet/bottom-sheet.service';
-import { haptic } from 'src/app/helpers/methods/native';
+import { haptic, showNativeDialog } from 'src/app/helpers/methods/native';
 import { RoundTripService } from '../round-trip.service';
 import { addIcons } from 'ionicons';
 import { addOutline, navigateOutline, optionsOutline, refreshOutline } from 'ionicons/icons';
@@ -24,7 +24,7 @@ addIcons({ optionsOutline, addOutline, refreshOutline, navigateOutline })
     <p slot="end" class="tw-ml-3">100km</p>
   </ion-range>
   <div class="tw-flex tw-gap-2">
-    <ion-button size="large" mode="ios" [disabled]="roundTripService.isRefreshingRoute$ | async" fill="solid" color="success" (click)="roundTripService.isSaveRouteVisible$.next(!roundTripService.isSaveRouteVisible$.value)">
+    <ion-button size="large" mode="ios" [disabled]="roundTripService.isRefreshingRoute$ | async" fill="solid" color="success" (click)="saveRouteClicked()">
       <ion-icon slot="icon-only" name="add-outline" class="tw-text-white"/>
     </ion-button>
     <ion-button size="large" mode="ios" [disabled]="roundTripService.isRefreshingRoute$ | async" fill="solid" color="medium"  (click)="refreshClicked()">
@@ -57,5 +57,18 @@ export class RoundTripMainConfigurationsComponent {
   refreshClicked() {
     haptic(ImpactStyle.Light)
     this.roundTripService.refreshRoundTrip()
+  }
+
+  saveRouteClicked() {
+    haptic(ImpactStyle.Light)
+    if (!this.roundTripService.routeResponseData?.routes?.length) {
+      showNativeDialog({
+        title: 'Error',
+        message: 'No route to save',
+        buttonTitle: 'Ok'
+      })
+      return
+    }
+    this.roundTripService.isSaveRouteVisible$.next(!this.roundTripService.isSaveRouteVisible$.value)
   }
 }

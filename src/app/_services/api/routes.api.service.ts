@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { ImpactStyle } from '@capacitor/haptics';
-import { BehaviorSubject, finalize, catchError, of, tap } from 'rxjs';
+import { BehaviorSubject, finalize, catchError, of, Subject, startWith, map, switchMap } from 'rxjs';
 import { IRouteQueryResponse } from 'src/app/_models/routeResponse';
 import { haptic } from 'src/app/helpers/methods/native';
 import { environment } from 'src/environments/environment';
@@ -15,12 +15,11 @@ export class RoutesApiService {
   constructor(private http: HttpClient, private toastController: ToastController) { }
 
   isLoading$ = new BehaviorSubject<boolean>(false)
-
+  private refreshRoutes$ = new Subject<void>();
 
   saveRoute(collectionId: string, routeName: string, routeQuery: IRouteQueryResponse, routeInfo: { distance: number, duration: number, location: string }) {
     this.isLoading$.next(true)
-    // TODO: fix collectionName
-    return this.http.post(`${this.apiUrl}/routes`, { collectionId, collectionName: '', name: routeName, routeQuery, routeInfo }).pipe(
+    return this.http.post(`${this.apiUrl}/routes`, { collectionId, name: routeName, routeQuery, routeInfo }).pipe(
       finalize(() => {
         this.isLoading$.next(false)
         haptic(ImpactStyle.Light)
@@ -40,21 +39,26 @@ export class RoutesApiService {
   }
 
   getSavedRoutes(payload?: IRouteRequest) {
-    let params = new HttpParams();
-    if (payload) {
-      const obj = payload as { [key: string]: any }
-      Object.keys(payload).forEach(key => {
-        params = params.set(key, String(obj[key]));
-      });
-    }
-    return this.http.get<IRouteResponse[]>(`${this.apiUrl}/routes`, { params })
+    return this.refreshRoutes$.pipe(
+      startWith(null),
+      map(() => {
+        let params = new HttpParams();
+        if (payload) {
+          const obj = payload as { [key: string]: any }
+          Object.keys(payload).forEach(key => {
+            params = params.set(key, String(obj[key]));
+          });
+        }
+        return params
+      }),
+      switchMap(params => this.http.get<IRouteResponse[]>(`${this.apiUrl}/routes`, { params }))
+    )
   }
 }
 
 export interface IRouteResponse {
   _id: string;
-  collectionName: string;
-  collectionId: number;
+  collectionId: string;
   name: string;
   routeQuery: {
     coordinates: number[][];

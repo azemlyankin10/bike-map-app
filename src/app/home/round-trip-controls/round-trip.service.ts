@@ -30,6 +30,8 @@ export class RoundTripService {
   isRefreshingRoute$ = new BehaviorSubject<boolean>(false)
   routeRef!: { polyline: Polyline<any> | undefined, polylineDecorator: any };
   routeResponseData!: IRouteResponse | null;
+  // private interactGeneratingRoute$ = new Subject<void>()
+  isRouteExist$ = new BehaviorSubject<boolean>(false)
   routeOptions = {
     length: 5,
     points: 10,
@@ -39,6 +41,14 @@ export class RoundTripService {
     distance: 0,
     duration: 0
   })
+
+  closeRoundTrip() {
+    this.isRouteExist$.next(false)
+    this.routeProperties.set({ distance: 0, duration: 0 })
+    this.routeRef?.polyline?.remove()
+    this.routeRef?.polylineDecorator?.remove()
+    this.routeResponseData = null
+  }
 
   private initGeneratingRoute() {
     this.generateRoute$.pipe(
@@ -62,6 +72,7 @@ export class RoundTripService {
         this.isRefreshingRoute$.next(false)
         if (!res) return;
         console.log(res, 'res');
+        this.isRouteExist$.next(true)
         this.routeResponseData = res
         const route = res.routes[0]
         const { distance, duration } = route.summary
@@ -89,7 +100,8 @@ export class RoundTripService {
 
   changeOptions(property: keyof typeof RoundTripService.prototype.routeOptions, value: number) {
     this.routeOptions[property] = value
-    this.generateRoute$.next(this.routeOptions)
+    // if (!this.isRouteExist$.value) return
+    // this.generateRoute$.next(this.routeOptions)
   }
 
   generateRoute() {
@@ -120,7 +132,7 @@ export class RoundTripService {
     steps.forEach((step: any) => {
       const latLng = coordinates[step.way_points[0]] as any
       const createdMarker = marker(latLng, {icon: this.instructionIcon}).addTo(this.mapService._mapComponentReference?.mapReference as any);
-      createdMarker.bindPopup(`<div class="tw-flex tw-items-center tw-gap-2"><img width="40" src="assets/icons/directions/${step.type}.svg" /><b>${step.instruction}</b></div><br>${step.distance} meters`).openPopup();
+      createdMarker.bindPopup(`<div class="tw-flex tw-items-center tw-gap-2"><img width="40" src="assets/icons/directions/${step.type}.svg" /><b>${step.instruction}</b></div><br>${step.distance} meters`)
       this.instructionMarkers.push(createdMarker)
     });
   }
@@ -129,5 +141,10 @@ export class RoundTripService {
     this.instructionMarkers.forEach(marker => marker.remove())
     this.instructionMarkers = []
   }
-
+  /**
+   * Navigation
+   */
+  startNavigation() {
+    console.log('Start navigation');
+  }
 }

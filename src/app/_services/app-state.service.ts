@@ -7,7 +7,7 @@ import { BehaviorSubject } from 'rxjs';
   providedIn: 'root'
 })
 export class AppStateService {
-  appState$ = new BehaviorSubject<'round-trip' | 'default'>('default');
+  appState$ = new BehaviorSubject<'navigation' | 'round-trip' | 'default'>('navigation');
   // isBottomSheetOpen$ = new BehaviorSubject<boolean>(false);
   // isSearchMode$ = new BehaviorSubject<boolean>(false);
 

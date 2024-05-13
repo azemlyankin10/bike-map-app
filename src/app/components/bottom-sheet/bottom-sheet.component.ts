@@ -1,5 +1,5 @@
 import { CommonModule, NgTemplateOutlet } from '@angular/common';
-import { AfterViewInit, Attribute, ChangeDetectionStrategy, Component, ElementRef, EventEmitter, OnInit, Output, ViewChild, effect, inject, signal } from '@angular/core';
+import { AfterViewInit, Attribute, ChangeDetectionStrategy, Component, ElementRef, EventEmitter, Input, OnInit, Output, ViewChild, effect, inject, signal } from '@angular/core';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import { Capacitor } from '@capacitor/core';
 import { GestureController } from '@ionic/angular';
@@ -18,7 +18,9 @@ import { destroyNotifier } from 'src/app/helpers/functions/destroyNotifier';
       <ng-container *ngTemplateOutlet="bottomSheetService.subsection | async" />
     </div>
     <div class="mainSection" #mainSection>
-      <button class="button-sheet-up-line" (click)="toggleSheet()"></button>
+      @if (closeOnSwipe) {
+        <button class="button-sheet-up-line" (click)="toggleSheet()"></button>
+      }
       <ng-content/>
     </div>
   `,
@@ -34,6 +36,7 @@ export class BottomSheetComponent implements AfterViewInit, OnInit {
   appState = inject(AppStateService);
   bottomSheetService = inject(BottomSheetService);
   @Output() closeSheet = new EventEmitter<void>();
+  @Input() closeOnSwipe = true;
 
   isOpen = signal(false);
 
@@ -68,6 +71,7 @@ export class BottomSheetComponent implements AfterViewInit, OnInit {
   }
 
   swipe(deltaY: number) {
+    if (!this.closeOnSwipe) return;
     if (deltaY < -50) {
       this.open()
     } else if (deltaY > 50) {

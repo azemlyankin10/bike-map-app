@@ -54,6 +54,27 @@ export class RoutesApiService {
       switchMap(params => this.http.get<IRouteResponse[]>(`${this.apiUrl}/routes`, { params }))
     )
   }
+
+  removeRoute(routeId: string) {
+    this.isLoading$.next(true)
+    return this.http.delete(`${this.apiUrl}/routes/${routeId}`).pipe(
+      finalize(() => {
+        this.isLoading$.next(false)
+        haptic(ImpactStyle.Light)
+      }),
+      catchError(e => {
+        console.error(e, 'Failed to remove route');
+        this.toastController.create({
+          message: 'Failed to remove route',
+          duration: 10000,
+          position: 'top',
+          buttons: [{ text: 'Close', role: 'cancel' }],
+          mode: 'ios'
+        }).then(toast => toast.present())
+        return of(null)
+      })
+    )
+  }
 }
 
 export interface IRouteResponse {

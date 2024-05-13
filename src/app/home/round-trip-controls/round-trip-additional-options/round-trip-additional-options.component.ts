@@ -12,7 +12,9 @@ import { AsyncPipe } from '@angular/common';
   template: `
     <h2 class="tw-font-bold tw-text-sm tw-px-3 tw-mb-2">Additional</h2>
     <div class="tw-flex tw-items-center tw-justify-between tw-gap-3 tw-px-3">
-      <ion-range [value]="roundTripService.routeOptions.points" [min]="3" [max]="30" (ionChange)="pointsChanged($event.detail.value)" label="Points" [pin]="true" class="tw-pt-0" mode="ios" [disabled]="roundTripService.isRefreshingRoute$ | async"/>
+      <ion-range [value]="roundTripService.routeOptions.points" [min]="3" [max]="30" (ionChange)="pointsChanged($event.detail.value)" label="Points" [pin]="true" class="tw-pt-0" mode="ios" [disabled]="roundTripService.isRefreshingRoute$ | async">
+        <p slot="start" class="tw-mr-3">{{ roundTripService.routeOptions.points }}</p>
+      </ion-range>
       <button class="tw-text-2xl tw-flex tw-items-center tw-justify-center active:tw-opacity-70 tw-transition-opacity" (click)="showInfoDialog()">
         <ion-icon slot="icon-only" name="help-circle-outline" />
       </button>
@@ -25,8 +27,9 @@ export class RoundTripAdditionalOptionsComponent {
   roundTripService = inject(RoundTripService)
 
   pointsChanged(value: any) {
-    haptic(ImpactStyle.Medium)
     this.roundTripService.changeOptions('points', value)
+    if (!this.roundTripService.isRouteExist$.value) return
+    haptic(ImpactStyle.Medium)
     this.roundTripService.generateRoute()
   }
 

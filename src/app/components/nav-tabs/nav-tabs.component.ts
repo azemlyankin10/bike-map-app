@@ -1,17 +1,20 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, ViewChild, inject, signal, viewChild } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { IonTabBar, IonTabs, IonIcon, IonTabButton, IonLabel, IonSearchbar } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { mapOutline, searchOutline, timerOutline, personOutline, syncCircleOutline } from "ionicons/icons";
+import { mapOutline, searchOutline, timerOutline, personOutline, syncCircleOutline, time } from "ionicons/icons";
 import { AppStateService } from 'src/app/_services/app-state.service';
 import { BottomSheetComponent } from '../bottom-sheet/bottom-sheet.component';
 import { RoundTripControlsComponent } from 'src/app/home/round-trip-controls/round-trip-controls.component';
+import { RoundTripService } from 'src/app/home/round-trip-controls/round-trip.service';
+import { Subscription, timer } from 'rxjs';
+import { NavigationComponent } from '../navigation/navigation.component';
 
 @Component({
   selector: 'app-nav-tabs',
   standalone: true,
-  imports: [CommonModule, IonIcon, IonTabs, IonTabBar, IonTabButton, IonLabel, BottomSheetComponent, IonSearchbar, RoundTripControlsComponent],
+  imports: [CommonModule, IonIcon, IonTabs, IonTabBar, IonTabButton, IonLabel, BottomSheetComponent, IonSearchbar, RoundTripControlsComponent, NavigationComponent],
   template: `
     <ion-tabs>
      <!-- @if (isShowNav()) { -->
@@ -20,7 +23,7 @@ import { RoundTripControlsComponent } from 'src/app/home/round-trip-controls/rou
           <ion-icon name="map-outline" aria-hidden="true" />
           <ion-label>Map</ion-label>
         </ion-tab-button>
-        <ion-tab-button (click)="bs.open(); appState.appState$.next('round-trip')">
+        <ion-tab-button (click)="appState.appState$.next('round-trip')">
           <ion-icon name="sync-circle-outline" aria-hidden="true" />
           <ion-label>Round trip</ion-label>
         </ion-tab-button>
@@ -40,35 +43,47 @@ import { RoundTripControlsComponent } from 'src/app/home/round-trip-controls/rou
     <!-- } -->
     </ion-tabs>
 
-    <app-bottom-sheet #bs mode="small" (closeSheet)="appState.appState$.next('default')">
-      <!-- <ion-searchbar animated="true" placeholder="Find location" mode="ios" show-clear-button="focus" /> -->
-      <app-round-trip-controls />
+    <app-bottom-sheet #bottomSheet [closeOnSwipe]="(appState.appState$ | async) === 'round-trip'" (closeSheet)="closeBottomSheet()">
+      @if ((appState.appState$ | async) === 'round-trip') {
+        <app-round-trip-controls />
+      } @else if ((appState.appState$ | async) === 'navigation') {
+        <app-navigation />
+      }
     </app-bottom-sheet>
   `,
   styleUrl: './nav-tabs.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class NavTabsComponent {
-  isRoundTripMode = signal(false)
+export class NavTabsComponent implements OnInit {
+  @ViewChild('bottomSheet') bottomSheet!: BottomSheetComponent
+  // isRoundTripMode = signal(false)
+  roundTripService = inject(RoundTripService)
 
   constructor(public appState: AppStateService, private route: ActivatedRoute, private router: Router) {
     addIcons({ mapOutline, searchOutline, timerOutline, personOutline, syncCircleOutline})
+  }
+
+  ngOnInit() {
+    let timeout!: Subscription
+    this.appState.appState$.subscribe(state => {
+      timeout?.unsubscribe()
+      if (['round-trip', 'navigation'].includes(state)) {
+        timeout = timer(100).subscribe(() => {
+          this.bottomSheet.open()
+        })
+      }
+    })
   }
 
   searchClicked() {
     this.router.navigate(['/home'], { fragment: 'search' })
   }
 
-  // ngOnInit() {
-  //   this.route.fragment.subscribe(fragment => {
-  //     this.appState.isBottomSheetOpen$.next(fragment === 'search')
-  //   })
-  //   this.appState.isBottomSheetOpen$.subscribe(isSearchMode => {
-  //     // this.appState.isBottomSheetOpen$.next(isSearchMode)
-  //     if (!isSearchMode) {
-  //       this.router.navigate(['/home'])
-  //     }
-  //   })
-  // }
+  closeBottomSheet() {
+    if (this.appState.appState$.value === 'round-trip'){
+      this.appState.appState$.next('default')
+      this.roundTripService.closeRoundTrip()
+    }
+  }
 
 }

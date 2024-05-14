@@ -43,7 +43,7 @@ export class HomePage implements OnInit, ViewDidEnter {
   ngOnInit() {
     this.appState.setStatusBarStyle('Light')
     this.appState.appState$.subscribe(state => {
-      this.appState.setStatusBarStyle(state === 'round-trip' ? 'Dark' : 'Light')
+      this.appState.setStatusBarStyle(state === 'default' ? 'Light' : 'Dark' )
       this.appStateMode.set(state)
     })
     // this.appState.isSearchMode$.subscribe(isSearchMode => this.isShowSearchMode.set(isSearchMode))

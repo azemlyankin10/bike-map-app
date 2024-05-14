@@ -1,0 +1,15 @@
+:host {
+  @apply tw-block tw-mb-3;
+}
+
+.nav-el {
+  @apply tw-text-center;
+
+  &__title {
+    @apply tw-text-xl tw-font-bold tw-text-gray-100;
+  }
+
+  &__subtitle {
+    @apply tw-text-2xl tw-text-gray-50;
+  }
+}

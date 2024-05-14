@@ -6,20 +6,21 @@ import { Pipe, type PipeTransform } from '@angular/core';
 })
 export class TimePipe implements PipeTransform {
 
-  transform(value: number, { showSeconds } = { showSeconds: true }) {
-    const hours = Math.floor(value / 3600);
-    const minutes = Math.floor((value % 3600) / 60);
-    const seconds = Math.round(value % 60);
+  transform(sec: number | null | undefined, { showSeconds, hideZero, dots }: { showSeconds?: boolean, hideZero?: boolean, dots?: boolean } = { showSeconds: true, hideZero: true, dots: false }) {
+    if (sec == null) return
+    const hours = Math.floor(sec / 3600);
+    const minutes = Math.floor((sec % 3600) / 60);
+    const seconds = Math.round(sec % 60);
 
     let result = '';
-    if (hours > 0) {
-      result += `${hours}h `;
+    if (hours || !hideZero) {
+      result += hours > 9 ? hours : '0' + hours + (dots ? ':' : 'h ');
     }
-    if (minutes > 0) {
-      result += `${minutes}m `;
+    if (minutes || !hideZero) {
+      result += minutes > 9 ? minutes : '0' + minutes + (dots ? ':' : 'm ');
     }
-    if (showSeconds && seconds > 0 || (hours === 0 && minutes === 0)) {
-      result += `${seconds}s`;
+    if (showSeconds && seconds || (hours === 0 && minutes === 0) || !hideZero) {
+      result += seconds > 9 ? seconds : '0' + seconds + (dots ? '' : 's ');
     }
 
     return result.trim();

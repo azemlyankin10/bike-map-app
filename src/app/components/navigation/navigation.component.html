@@ -1,0 +1,37 @@
+<div class="tw-grid tw-grid-cols-2 tw-gap-3 tw-mb-2">
+  <div class="nav-el">
+    <p class="nav-el__title">Time</p>
+    <span class="nav-el__subtitle">{{ elapsedTime$ | async | time: { hideZero: false, dots: true } }}</span>
+  </div>
+  <div class="nav-el">
+    <p class="nav-el__title">Distance</p>
+    <span class="nav-el__subtitle">{{ traveledDistance$ | async | distance }}</span>
+  </div>
+  <div class="nav-el">
+    <p class="nav-el__title">Current speed</p>
+    <span class="nav-el__subtitle">{{ currentSpeed$ | async }}</span>
+  </div>
+  <div class="nav-el">
+    <p class="nav-el__title">Average speed</p>
+    <span class="nav-el__subtitle">10km/h</span>
+  </div>
+</div>
+<div class="tw-flex">
+  @if (navigationCommunication.isPaused$ | async) {
+    <div class="tw-flex tw-gap-2 tw-w-full">
+      <ion-button size="large" class="tw-w-full tw-text-xl" color="danger" (click)="stop()">
+        <ion-icon slot="start" name="stop-circle-outline" />
+        <span>Stop</span>
+      </ion-button>
+      <ion-button size="large" class="tw-w-full tw-text-xl" color="warning" (click)="resume()">
+        <ion-icon slot="start" name="play-circle-outline" />
+        <span>Resume</span>
+      </ion-button>
+    </div>
+  } @else {
+    <ion-button size="large" class="tw-w-full tw-text-xl" color="light" (click)="pause()">
+      <ion-icon slot="start" name="pause-outline" />
+      <span>Pause</span>
+    </ion-button>
+  }
+</div>

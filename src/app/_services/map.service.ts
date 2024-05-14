@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { Position, Geolocation } from '@capacitor/geolocation';
-import { Observable, Subject, catchError, from, of, shareReplay, switchMap } from 'rxjs';
+import { BehaviorSubject, Observable, Subject, catchError, from, interval, of, shareReplay, switchMap, tap } from 'rxjs';
 import { MapComponent, myLocationPulsingIcon } from '../components/map/map.component';
 import { GeoApiService, TDirectionApiOptions } from './api/geo.api.service';
 import { showNativeDialog } from '../helpers/methods/native';
@@ -14,15 +14,18 @@ export class MapService {
   public _mapComponentReference: MapComponent | null = null; // available after the map is created
   mapCreated$ = new Subject<MapComponent>();
   myLocationMarker!: Marker
+  public userCurrentLocation$ = new BehaviorSubject<{lat: number, lon: number} | null>(null);
 
   constructor() {
     this.mapCreated$.subscribe((mapComponent) => {
       this._mapComponentReference = mapComponent;
       const mapRef = mapComponent.mapReference as Map
 
+      // my location marker
       this.myLocationMarker = marker([0, 0], { icon: myLocationPulsingIcon }).addTo(mapRef);
       let isFirstLocationUpdate = true
       this.subscribeToCurrentLocation$().subscribe(({ coords: { latitude, longitude } }) => {
+        this.userCurrentLocation$.next({ lat: latitude, lon: longitude })
         this.myLocationMarker.setLatLng([latitude, longitude]);
         if (isFirstLocationUpdate) {
           mapRef.setView([latitude, longitude], 13);
@@ -33,21 +36,32 @@ export class MapService {
   }
 
   subscribeToCurrentLocation$() {
-    let watchId: string;
-    return new Observable<Position>((observer) => {
-      Geolocation.watchPosition({ enableHighAccuracy: true }, (position, err) => {
-        // console.log(position);
+    let latitude = 51.0459008;
+    let longitude = 4.3399518;
+    return interval(1000).pipe(
+      tap(() => {
+        latitude+=0.0001;
+        longitude+=0.0001;
+      }),
+      switchMap(() => {
+        return of({ coords: { latitude, longitude } } as Position)
+      })
+    )
+    // let watchId: string;
+    // return new Observable<Position>((observer) => {
+    //   Geolocation.watchPosition({ enableHighAccuracy: true }, (position, err) => {
+    //     // console.log(position);
 
-        // showNativeDialog({ message: JSON.stringify(position) })
-        if (err) {
-          observer.error(err);
-          return;
-        }
-        observer.next(position as Position);
-      }).then((id) => watchId = id);
+    //     // showNativeDialog({ message: JSON.stringify(position) })
+    //     if (err) {
+    //       observer.error(err);
+    //       return;
+    //     }
+    //     observer.next(position as Position);
+    //   }).then((id) => watchId = id);
 
-      return () => Geolocation.clearWatch({ id: watchId });
-    });
+    //   return () => Geolocation.clearWatch({ id: watchId });
+    // });
   }
 
   displayRoute(geometryLine: string) {

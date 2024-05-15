@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { Position, Geolocation } from '@capacitor/geolocation';
-import { BehaviorSubject, Observable, Subject, catchError, from, interval, of, shareReplay, switchMap, tap } from 'rxjs';
+import { BehaviorSubject, Observable, Subject, catchError, from, interval, of, share, shareReplay, switchMap, tap } from 'rxjs';
 import { MapComponent, myLocationPulsingIcon } from '../components/map/map.component';
 import { GeoApiService, TDirectionApiOptions } from './api/geo.api.service';
 import { showNativeDialog } from '../helpers/methods/native';
@@ -36,17 +36,22 @@ export class MapService {
   }
 
   subscribeToCurrentLocation$() {
+    ///
     let latitude = 51.0459008;
     let longitude = 4.3399518;
     return interval(1000).pipe(
       tap(() => {
-        latitude+=0.0001;
-        longitude+=0.0001;
+        // latitude+=getRandomNumber(-0.0001, -0.0005);
+        // longitude+=getRandomNumber(-0.0001, -0.0005);
+        latitude+= 0.0001;
+        longitude+= 0.0001;
       }),
       switchMap(() => {
         return of({ coords: { latitude, longitude } } as Position)
-      })
+      }),
+
     )
+    /////
     // let watchId: string;
     // return new Observable<Position>((observer) => {
     //   Geolocation.watchPosition({ enableHighAccuracy: true }, (position, err) => {
@@ -114,3 +119,6 @@ export class MapService {
 //   enableHighAccuracy: true,
 //   maximumAge: 1000, // Update location every second
 // });
+
+
+const getRandomNumber = (min: number, max: number) => Math.random() * (max - min) + min;

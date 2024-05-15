@@ -8,6 +8,7 @@
     "Haptics",
     "ionicons",
     "locationfound",
-    "osrmv"
+    "osrmv",
+    "unproject"
   ]
 }

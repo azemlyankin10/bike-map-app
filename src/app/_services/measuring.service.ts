@@ -1,5 +1,5 @@
-import { Injectable, signal } from '@angular/core';
-import { BehaviorSubject, combineLatest, interval, map, of, startWith, switchMap, tap } from 'rxjs';
+import { Injectable } from '@angular/core';
+import { BehaviorSubject, auditTime, combineLatest, interval, map, of, switchMap, tap } from 'rxjs';
 import { MapService } from './map.service';
 import { LatLng, latLng } from 'leaflet'
 
@@ -65,7 +65,7 @@ export class MeasuringService {
         return this.mapService.userCurrentLocation$.pipe(
           map((location) => {
             if (!location) return this.distanceToCalculate;
-            console.log(location, 'location');
+            // console.log(location, 'location');
 
             const { lat, lon } = location;
             this.distanceToCalculate[0] = this.distanceToCalculate[1];
@@ -108,5 +108,20 @@ export class MeasuringService {
         return (speed * 3.6).toFixed(0) + ' km/h';
       })
     );
+  }
+  /**
+   * Average speed
+   */
+  averageSpeed$() {
+    return combineLatest([this.traveledDistance$(), this.elapsedTime$()]).pipe(
+      auditTime(5000),
+      map(([distance, time]) => {
+        // Calculate the average speed in m/s
+        const averageSpeed = time > 0 ? distance / time : 0;
+
+        // Convert to km/h and format the result
+        return (averageSpeed * 3.6).toFixed(0) + ' km/h';
+      })
+    )
   }
 }

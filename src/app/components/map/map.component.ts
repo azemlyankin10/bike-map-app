@@ -4,8 +4,6 @@ import {
   ChangeDetectionStrategy,
   Component,
   ElementRef,
-  EventEmitter,
-  Output,
   inject,
 } from '@angular/core';
 import * as L from 'leaflet';
@@ -16,6 +14,7 @@ import { Position, Geolocation } from '@capacitor/geolocation';
 import '@ansur/leaflet-pulse-icon/dist/L.Icon.Pulse.js';
 import '@ansur/leaflet-pulse-icon/dist/L.Icon.Pulse.css';
 import 'leaflet-polylinedecorator';
+import 'leaflet-rotate';
 
 @Component({
   selector: 'app-map',
@@ -54,7 +53,24 @@ export class MapComponent implements AfterViewInit {
       {
         center: [51.505, -0.09],
         zoom: 13,
-      }
+        preferCanvas: true,
+        //
+        rotate: true,
+				rotateControl: {
+					closeOnZeroBearing: false,
+					// position: 'bottomleft',
+				},
+				bearing: 30,
+				// attributionControl: false,
+				// zoomControl: false,
+				compassBearing: true,
+				// trackContainerMutation: false,
+				// shiftKeyRotate: false,
+				// touchGestures: true,
+				touchRotate: true,
+				// touchZoom: true
+        ////
+      } as any
     );
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(
       this.mapReference
@@ -79,6 +95,31 @@ export class MapComponent implements AfterViewInit {
     //     const coordinates = orsRoute.geometry.coordinates.map((c: any) => [c[1], c[0]]);
     //     this.displayRoute(coordinates);
     //   });
+  }
+
+  setRotationAngle(angle: number) {
+    if (!this.mapReference) return;
+    console.log(this.mapReference);
+
+    return (this.mapReference as any).setBearing(angle, { animate: true, duration: 1 });
+  }
+
+  getAdjustedMapViewCoordinates(lat: number, lng: number, offsetX = 0, offsetY = 0) {
+    if (!this.mapReference) return;
+    // const pixelCoords = this.mapReference.project(L.latLng(lat, lng), this.mapReference.getZoom());
+    // const newPixelCoords = pixelCoords.add([offsetX, offsetY]); // Add -100 pixels to the y-coordinate
+    // return this.mapReference.unproject(newPixelCoords, this.mapReference.getZoom());
+
+  // Get the current map rotation angle in radians
+  const rotationAngle = -(this.mapReference as any).getBearing() * Math.PI / 180;
+
+  // Rotate the offset vector by the map rotation angle
+  const rotatedOffsetX = offsetX * Math.cos(rotationAngle) - offsetY * Math.sin(rotationAngle);
+  const rotatedOffsetY = offsetX * Math.sin(rotationAngle) + offsetY * Math.cos(rotationAngle);
+
+  const pixelCoords = this.mapReference.project(L.latLng(lat, lng), this.mapReference.getZoom());
+  const newPixelCoords = pixelCoords.add([rotatedOffsetX, rotatedOffsetY]); // Add the rotated offset to the pixel coordinates
+  return this.mapReference.unproject(newPixelCoords, this.mapReference.getZoom());
   }
 
   decodePolyline(polylineString: string) {

@@ -1,16 +1,14 @@
-import { CommonModule } from '@angular/common';
 import {
   AfterViewInit,
   ChangeDetectionStrategy,
   Component,
   ElementRef,
+  ViewChild,
   inject,
 } from '@angular/core';
 import * as L from 'leaflet';
-import { Subject } from 'rxjs';
 import { MapService } from 'src/app/_services/map.service';
 import * as polyline from '@mapbox/polyline';
-import { Position, Geolocation } from '@capacitor/geolocation';
 import '@ansur/leaflet-pulse-icon/dist/L.Icon.Pulse.js';
 import '@ansur/leaflet-pulse-icon/dist/L.Icon.Pulse.css';
 import 'leaflet-polylinedecorator';
@@ -19,16 +17,15 @@ import 'leaflet-rotate';
 @Component({
   selector: 'app-map',
   standalone: true,
-  imports: [
-    CommonModule,
-  ],
+  imports: [],
   template: `
-    <div class="map"></div>
+    <div #map class="map"></div>
   `,
   styleUrl: './map.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MapComponent implements AfterViewInit {
+  @ViewChild('map') mapDomElement!: ElementRef<HTMLDivElement>;
   // @Output() navigateToCurrentLocationClicked = new EventEmitter<void>();
   private hostRef = inject(ElementRef);
   private mapService = inject(MapService);
@@ -48,6 +45,13 @@ export class MapComponent implements AfterViewInit {
   // }
 
   ngAfterViewInit() {
+    // const rotateProps = {
+    //   rotateControl: {
+    //     closeOnZeroBearing: false,
+    //     position: 'bottomleft',
+    //   },
+		// 		compassBearing: true,
+    // }
     this.mapReference = L.map(
       this.hostRef.nativeElement.querySelector('.map'),
       {
@@ -56,52 +60,50 @@ export class MapComponent implements AfterViewInit {
         preferCanvas: true,
         //
         rotate: true,
-				rotateControl: {
-					closeOnZeroBearing: false,
-					// position: 'bottomleft',
-				},
-				bearing: 30,
+        // ...rotateProps as any,
+				bearing: 0,
+        rotateControl: false,
 				// attributionControl: false,
-				// zoomControl: false,
-				compassBearing: true,
-				// trackContainerMutation: false,
+				zoomControl: true,
+				trackContainerMutation: true,
 				// shiftKeyRotate: false,
-				// touchGestures: true,
 				touchRotate: true,
 				// touchZoom: true
         ////
-      } as any
+      }
     );
-    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(
-      this.mapReference
-    );
+    // 'https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png'
+    // 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
+    // http://tile.mtbmap.cz/mtbmap_tiles/{z}/{x}/{y}.png
+    // https://tile.waymarkedtrails.org/cycling/{z}/{x}/{y}.png // cycling additional map
+    // https://tile.waymarkedtrails.org/mtb/{z}/{x}/{y}.png // mtb additional map
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(this.mapReference);
+    L.tileLayer('https://tile.waymarkedtrails.org/mtb/{z}/{x}/{y}.png').addTo(this.mapReference);
+
     this.mapService.mapCreated$.next(this);
-
-    // setTimeout(() => {
-    //   this.mapReference?.invalidateSize();
-    // }, 5000);
-    // MapComponent.mapCreated$.next();
-    // this.mapService.mapReference = this;
-
-    // const orsAPI = 'http://localhost:8080/ors/v2/directions/driving-car';
-    // const start = '8.681495,49.41461'; // start point
-    // const end = '8.687872,49.420318'; // end point
-    // const requestUrl = orsAPI + '?start=' + start + '&end=' + end;
-
-    // fetch(requestUrl)
-    //   .then(response => response.json())
-    //   .then(data => {
-    //     const orsRoute = data.features[0];
-    //     const coordinates = orsRoute.geometry.coordinates.map((c: any) => [c[1], c[0]]);
-    //     this.displayRoute(coordinates);
-    //   });
   }
 
-  setRotationAngle(angle: number) {
+  setRotationToNorth() {
     if (!this.mapReference) return;
-    console.log(this.mapReference);
+    this.mapReference.setBearing(0);
+  }
 
-    return (this.mapReference as any).setBearing(angle, { animate: true, duration: 1 });
+  setDynamicMapRotationAngle(currentCoords: {lat: number, lon: number}, previousCoords: {lat: number, lon: number}) {
+    if (!this.mapReference) return;
+    // console.log(this.mapReference);
+    const rad = (deg: any) => deg * Math.PI / 180;
+    const bearing = calculateBearing(rad(previousCoords.lat), rad(previousCoords.lon), rad(currentCoords.lat), rad(currentCoords.lon));
+    this.mapReference.setBearing(360 - bearing);
+  }
+
+  debounceMarkerWhileRotating(marker: L.Marker) {
+    // this.mapService.myLocationMarker
+    if (!this.mapReference) return;
+    const markerPoint = this.mapReference.latLngToContainerPoint(marker.getLatLng())!
+    // Convert the point to the rotated coordinate system
+    const rotatedPoint = this.mapReference?.mapPanePointToRotatedPoint(markerPoint);
+    // Set the marker's position using the rotated point
+    marker.setLatLng(this.mapReference.containerPointToLatLng(rotatedPoint!)!);
   }
 
   getAdjustedMapViewCoordinates(lat: number, lng: number, offsetX = 0, offsetY = 0) {
@@ -110,16 +112,15 @@ export class MapComponent implements AfterViewInit {
     // const newPixelCoords = pixelCoords.add([offsetX, offsetY]); // Add -100 pixels to the y-coordinate
     // return this.mapReference.unproject(newPixelCoords, this.mapReference.getZoom());
 
-  // Get the current map rotation angle in radians
-  const rotationAngle = -(this.mapReference as any).getBearing() * Math.PI / 180;
+    // Get the current map rotation angle in radians
+    const rotationAngle = -(this.mapReference as any).getBearing() * Math.PI / 180;
+    // Rotate the offset vector by the map rotation angle
+    const rotatedOffsetX = offsetX * Math.cos(rotationAngle) - offsetY * Math.sin(rotationAngle);
+    const rotatedOffsetY = offsetX * Math.sin(rotationAngle) + offsetY * Math.cos(rotationAngle);
 
-  // Rotate the offset vector by the map rotation angle
-  const rotatedOffsetX = offsetX * Math.cos(rotationAngle) - offsetY * Math.sin(rotationAngle);
-  const rotatedOffsetY = offsetX * Math.sin(rotationAngle) + offsetY * Math.cos(rotationAngle);
-
-  const pixelCoords = this.mapReference.project(L.latLng(lat, lng), this.mapReference.getZoom());
-  const newPixelCoords = pixelCoords.add([rotatedOffsetX, rotatedOffsetY]); // Add the rotated offset to the pixel coordinates
-  return this.mapReference.unproject(newPixelCoords, this.mapReference.getZoom());
+    const pixelCoords = this.mapReference.project(L.latLng(lat, lng), this.mapReference.getZoom());
+    const newPixelCoords = pixelCoords.add([rotatedOffsetX, rotatedOffsetY]); // Add the rotated offset to the pixel coordinates
+    return this.mapReference.unproject(newPixelCoords, this.mapReference.getZoom());
   }
 
   decodePolyline(polylineString: string) {
@@ -141,6 +142,7 @@ export class MapComponent implements AfterViewInit {
       ]
     })
   }
+
 
   // navigateToCurrentLocation() {
   //   this.mapReference?.locate({setView: true, maxZoom: 16});
@@ -243,3 +245,12 @@ export const myLocationPulsingIcon = (L.icon as any).pulse({
   fillColor: '#3B7FFC',
   heartbeat: 2
 });
+
+
+function calculateBearing(lat1: number, lon1: number, lat2: number, lon2: number) {
+  const y = Math.sin(lon2 - lon1) * Math.cos(lat2);
+  const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(lon2 - lon1);
+  let bearing = Math.atan2(y, x) * 180 / Math.PI;
+  bearing = (bearing + 360) % 360; // ensure the result is between 0 and 360
+  return bearing;
+}

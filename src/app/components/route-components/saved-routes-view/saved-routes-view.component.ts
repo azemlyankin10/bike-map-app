@@ -2,18 +2,18 @@ import { AfterViewInit, ChangeDetectionStrategy, Component, ElementRef, EventEmi
 import { IonModal, IonHeader, IonToolbar, IonTitle, IonButtons, IonButton, IonContent, IonCard, IonCardHeader, IonCardContent, IonCardTitle, IonCardSubtitle } from "@ionic/angular/standalone";
 import { combineLatest, takeUntil } from 'rxjs';
 import { DistancePipe } from 'src/app/_pipes/distance.pipe';
-import { TimePipe } from 'src/app/_pipes/time.pipe';
 import { RouteCollectionApiService } from 'src/app/_services/api/route-collection.api.service';
 import { IRouteResponse, RoutesApiService } from 'src/app/_services/api/routes.api.service';
 import { destroyNotifier } from 'src/app/helpers/functions/destroyNotifier';
 import { GestureController } from '@ionic/angular';
 import { haptic, showNativeConfirmDialog } from 'src/app/helpers/methods/native';
 import { ImpactStyle } from '@capacitor/haptics';
+import { DurationToDatePipe } from 'src/app/_pipes/durationToDate.pipe';
 
 @Component({
   selector: 'app-saved-routes-card',
   standalone: true,
-  imports: [DistancePipe, TimePipe, IonCard, IonCardHeader, IonCardTitle, IonCardSubtitle, IonCardContent],
+  imports: [DistancePipe, IonCard, IonCardHeader, IonCardTitle, IonCardSubtitle, IonCardContent, DurationToDatePipe],
   template: `
     <ion-card class="tw-flex tw-overflow-hidden">
       <div class="tw-w-full card tw-transition-transform">
@@ -24,7 +24,7 @@ import { ImpactStyle } from '@capacitor/haptics';
 
         <ion-card-content>
           <p>Distance: <span>{{ route.routeInfo.distance | distance }}</span></p>
-          <p>Duration: <span>{{ route.routeInfo.duration | time }}</span></p>
+          <p>Duration: <span>{{ route.routeInfo.duration | durationToDate }}</span></p>
           <p>Start location: <span>{{ route.routeInfo.location }}</span></p>
         </ion-card-content>
       </div>
@@ -98,7 +98,7 @@ export class SavedRoutesCardComponent implements AfterViewInit {
 @Component({
   selector: 'app-saved-routes-view',
   standalone: true,
-  imports: [DistancePipe, TimePipe, IonModal, IonHeader, IonToolbar, IonTitle, IonButtons, IonButton, IonContent, SavedRoutesCardComponent],
+  imports: [DistancePipe, IonModal, IonHeader, IonToolbar, IonTitle, IonButtons, IonButton, IonContent, SavedRoutesCardComponent],
   template: `
     <ion-modal [isOpen]="isOpen" #modal>
       <ng-template>

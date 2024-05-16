@@ -1,16 +1,16 @@
-import { AsyncPipe } from '@angular/common';
+import { AsyncPipe, DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { IonButton, IonCol, IonGrid, IonIcon, IonItem, IonList, IonRow, IonToggle } from '@ionic/angular/standalone';
 import { DistancePipe } from 'src/app/_pipes/distance.pipe';
-import { TimePipe } from 'src/app/_pipes/time.pipe';
 import { RoundTripService } from '../round-trip.service';
 import { addIcons } from 'ionicons';
 import { chevronDownOutline, chevronUpOutline } from 'ionicons/icons';
+import { DurationToDatePipe } from 'src/app/_pipes/durationToDate.pipe';
 addIcons({ chevronDownOutline, chevronUpOutline })
 @Component({
   selector: 'app-round-trip-route-info',
   standalone: true,
-  imports: [AsyncPipe, IonGrid, IonRow, IonCol, IonButton, IonIcon, IonList, IonItem, IonToggle, TimePipe, DistancePipe],
+  imports: [AsyncPipe, IonGrid, IonRow, IonCol, IonButton, IonIcon, IonList, IonItem, IonToggle, DistancePipe, DurationToDatePipe, DatePipe],
   template: `
     <ion-grid [fixed]="true">
       <ion-row>
@@ -18,7 +18,7 @@ addIcons({ chevronDownOutline, chevronUpOutline })
           Distance: {{ roundTripService.routeProperties().distance | distance }}
         </ion-col>
         <ion-col class="tw-flex tw-items-center tw-justify-center">
-          Duration: {{ roundTripService.routeProperties().duration | time: { showSeconds: false } }}
+          Duration: {{ roundTripService.routeProperties().duration | durationToDate: 'formatTimeWithNames' }}
         </ion-col>
         <ion-col size="auto">
           <ion-button size="small" mode="ios" fill="solid" color="dark" (click)="isRouteInfoSubsectionVisible.set(!isRouteInfoSubsectionVisible())">

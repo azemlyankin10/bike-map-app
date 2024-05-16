@@ -13,20 +13,27 @@ import { RoundTripControlsComponent } from './round-trip-controls/round-trip-con
 import { marker } from 'leaflet';
 import { showNativeDialog } from '../helpers/methods/native';
 import { RoundTripService } from './round-trip-controls/round-trip.service';
-import { AsyncPipe, CommonModule, NgTemplateOutlet } from '@angular/common';
+import { AsyncPipe, CommonModule, NgStyle, NgTemplateOutlet } from '@angular/common';
+import { NavigationService } from '../components/navigation/navigation.service';
+import { Observable, takeUntil } from 'rxjs';
+import { destroyNotifier } from '../helpers/functions/destroyNotifier';
+import { IRouteInstructionStep, StepInstructionBarComponent } from '../components/step-instruction-bar/step-instruction-bar.component';
 @Component({
   selector: 'app-home',
   templateUrl: 'home.page.html',
   styleUrls: ['home.page.scss'],
   standalone: true,
-  imports: [IonContent, IonSearchbar, MapComponent, IonHeader, IonToolbar, IonSegment, IonSegmentButton, IonLabel, RoundTripControlsComponent, CommonModule],
+  imports: [NgStyle, NgTemplateOutlet, AsyncPipe, IonContent, IonSearchbar, MapComponent, IonHeader, IonToolbar, IonSegment, IonSegmentButton, IonLabel, RoundTripControlsComponent, StepInstructionBarComponent],
 })
 export class HomePage implements OnInit, ViewDidEnter {
+  IS_DESTROYED = destroyNotifier()
   appStateMode = signal('default')
+  currentNavInstruction$!: Observable<IRouteInstructionStep | null>
+  // routeInstruction$!: any
   // isShowSearchMode = signal(false);
   // @ViewChild('bottomSheet') bottomSheet!: ElementRef
   // selectedMode = signal<'default' | 'roundLoop'>('default')
-  constructor(private getApi: GeoApiService, private mapService: MapService, private appState: AppStateService, public roundTripService: RoundTripService) {}
+  constructor(private getApi: GeoApiService, private mapService: MapService, private appState: AppStateService, public roundTripService: RoundTripService, private navigationService: NavigationService) {}
 
   // modeChanged(mode: SegmentValue) {
   //   this.selectedMode.set(mode as 'default' | 'roundLoop')
@@ -38,6 +45,7 @@ export class HomePage implements OnInit, ViewDidEnter {
   ionViewDidEnter() {
     // to fix the map size issue
     this.mapService._mapComponentReference?.mapReference?.invalidateSize();
+
   }
 
   ngOnInit() {
@@ -45,7 +53,13 @@ export class HomePage implements OnInit, ViewDidEnter {
     this.appState.appState$.subscribe(state => {
       this.appState.setStatusBarStyle(state === 'default' ? 'Light' : 'Dark' )
       this.appStateMode.set(state)
+
+      if (state === 'navigation') {
+        this.currentNavInstruction$ = this.navigationService.observeRoute$().pipe(takeUntil(this.IS_DESTROYED))
+      }
     })
+
+
     // this.appState.isSearchMode$.subscribe(isSearchMode => this.isShowSearchMode.set(isSearchMode))
       // MapComponent.mapCreated$.subscribe(() => {
       //   // this.map.navigateToCurrentLocation()

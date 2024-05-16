@@ -9,7 +9,7 @@
 <div class="tw-grid tw-grid-cols-2 tw-gap-3 tw-mb-2">
   <div class="nav-el">
     <p class="nav-el__title">Time</p>
-    <span class="nav-el__subtitle">{{ elapsedTime$ | async | time: { hideZero: false, dots: true } }}</span>
+    <span class="nav-el__subtitle">{{ elapsedTime$ | async | durationToDate | date: 'HH:mm:ss' }}</span>
   </div>
   <div class="nav-el">
     <p class="nav-el__title">Distance</p>

@@ -10,3 +10,7 @@
 .map {
   @apply tw-w-full tw-h-full;
 }
+
+::ng-deep .map.animateRotation .leaflet-rotate-pane {
+  @apply tw-transition-all tw-duration-700 tw-ease-in-out;
+}

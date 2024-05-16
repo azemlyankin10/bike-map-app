@@ -5,19 +5,21 @@ import { MapComponent, myLocationPulsingIcon } from '../components/map/map.compo
 import { GeoApiService, TDirectionApiOptions } from './api/geo.api.service';
 import { showNativeDialog } from '../helpers/methods/native';
 import { CircleMarker, Map, Marker, circleMarker, divIcon, marker } from 'leaflet';
-
+import { INavigateRoute } from '../_models/routeResponse';
+let deleteMe: any = []
 @Injectable({
   providedIn: 'root'
 })
 export class MapService {
   geoApi = inject(GeoApiService);
   public _mapComponentReference: MapComponent | null = null; // available after the map is created
-  mapCreated$ = new Subject<MapComponent>();
+  mapCreated$ = new BehaviorSubject<MapComponent | null>(null);
   myLocationMarker!: Marker
   public userCurrentLocation$ = new BehaviorSubject<{lat: number, lon: number} | null>(null);
 
   constructor() {
     this.mapCreated$.subscribe((mapComponent) => {
+      if (!mapComponent) return;
       this._mapComponentReference = mapComponent;
       const mapRef = mapComponent.mapReference as Map
 
@@ -33,18 +35,27 @@ export class MapService {
         }
       })
     });
+
+
   }
 
   subscribeToCurrentLocation$() {
-    ///
+    // ///
+    // TODO: delete this
     let latitude = 51.0459008;
     let longitude = 4.3399518;
+    let watchId = 0;
     return interval(1000).pipe(
       tap(() => {
-        // latitude+=getRandomNumber(-0.0001, -0.0005);
-        // longitude+=getRandomNumber(-0.0001, -0.0005);
-        latitude+= 0.0001;
-        longitude+= 0.0001;
+        // // latitude+=getRandomNumber(-0.0001, -0.0005);
+        // // longitude+=getRandomNumber(-0.0001, -0.0005);
+        // latitude+= 0.0001;
+        // longitude+= 0.0001;
+        const cords = deleteMe[watchId]
+        if (!cords) return;
+        latitude = cords[0]
+        longitude = cords[1]
+        watchId++;
       }),
       switchMap(() => {
         return of({ coords: { latitude, longitude } } as Position)
@@ -71,9 +82,26 @@ export class MapService {
 
   displayRoute(geometryLine: string) {
     const decoded = this._mapComponentReference?.decodePolyline(geometryLine);
+    // TODO: delete this
+    // needs to be deleted
+    console.log(decoded);
+    deleteMe = decoded;
+    ///
     const polyline = this._mapComponentReference?.displayPolyline(decoded);
     const polylineDecorator = this._mapComponentReference?.addPolylineDecorator(polyline).addTo(this._mapComponentReference?.mapReference);
     return { polyline, polylineDecorator };
+  }
+
+  parseInstructionsAndReturnSteps(route: INavigateRoute) {
+    if (!this._mapComponentReference) return;
+    const coordinates = this._mapComponentReference.decodePolyline(route.geometry);
+    if (!coordinates) return;
+    const steps = (route as any).segments?.flatMap((segment:any) => segment.steps);
+    if (!steps) return;
+    return steps.map((step: any) => {
+      const latLng = coordinates[step.way_points[0]];
+      return { ...step, latLng };
+    });
   }
 
 

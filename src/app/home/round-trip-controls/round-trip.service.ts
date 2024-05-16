@@ -7,6 +7,7 @@ import { Marker, Polyline, icon, marker } from 'leaflet';
 import { getRandomNumber } from 'src/app/helpers/functions/getRandomNumber';
 import { ToastController } from '@ionic/angular';
 import { IRouteResponse } from 'src/app/_models/routeResponse';
+import { AppStateService } from 'src/app/_services/app-state.service';
 
 @Injectable({
   providedIn: 'root'
@@ -14,7 +15,7 @@ import { IRouteResponse } from 'src/app/_models/routeResponse';
 export class RoundTripService {
   isSaveRouteVisible$ = new BehaviorSubject<boolean>(false)
   isSavedRouteViewVisible$ = new BehaviorSubject<boolean>(false)
-  constructor(private geoApi: GeoApiService, private mapService: MapService, private toastController: ToastController) {
+  constructor(private geoApi: GeoApiService, private mapService: MapService, private toastController: ToastController, private appState: AppStateService) {
     this.initGeneratingRoute()
     this.initInstructions()
   }
@@ -82,13 +83,15 @@ export class RoundTripService {
           this.routeRef?.polylineDecorator?.remove()
         }
         this.routeRef = this.mapService.displayRoute(route.geometry)
+        this.mapService._mapComponentReference?.setRotationToNorth()
       })
   }
 
   generateRoundTrip(options: TDirectionApiOptions) {
-    return from(Geolocation.getCurrentPosition()).pipe(
+    return of(this.mapService.userCurrentLocation$.value).pipe(
       tap(position => console.log(position, 'position')),
-      switchMap(position => this.geoApi.getDirection([[position.coords.longitude, position.coords.latitude]], options))
+      map(location => location ?? ({ lat: 0, lon: 0 }) ),
+      switchMap(({lat, lon}) => this.geoApi.getDirection([[lon, lat]], options))
     )
   }
 
@@ -124,14 +127,10 @@ export class RoundTripService {
 
   private showInstructions() {
     if (!this.routeResponseData) return;
-    const coordinates = this.mapService._mapComponentReference?.decodePolyline(this.routeResponseData.routes[0].geometry);
-    if (!coordinates) return;
-
-    const steps = (this.routeResponseData.routes[0].segments as any)?.flatMap((segment: any) => segment.steps);
+    const steps = this.mapService.parseInstructionsAndReturnSteps(this.routeResponseData.routes[0])
     if (!steps) return;
     steps.forEach((step: any) => {
-      const latLng = coordinates[step.way_points[0]] as any
-      const createdMarker = marker(latLng, {icon: this.instructionIcon}).addTo(this.mapService._mapComponentReference?.mapReference as any);
+      const createdMarker = marker(step.latLng, {icon: this.instructionIcon}).addTo(this.mapService._mapComponentReference?.mapReference as any);
       createdMarker.bindPopup(`<div class="tw-flex tw-items-center tw-gap-2"><img width="40" src="assets/icons/directions/${step.type}.svg" /><b>${step.instruction}</b></div><br>${step.distance} meters`)
       this.instructionMarkers.push(createdMarker)
     });
@@ -145,6 +144,11 @@ export class RoundTripService {
    * Navigation
    */
   startNavigation() {
+    if (!this.routeResponseData) return;
     console.log('Start navigation');
+    this.appState.appState$.next('navigation')
+    const steps = this.mapService.parseInstructionsAndReturnSteps(this.routeResponseData.routes[0])
+    if (!steps) return;
+    this.appState.routeInstructionSteps.set(steps)
   }
 }

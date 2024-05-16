@@ -19,6 +19,9 @@
       @case ('round-trip') {
         <ng-container *ngTemplateOutlet="roundTripService.routeInfoComponent | async" />
       }
+      @case ('navigation') {
+        <app-step-instruction-bar [step]="currentNavInstruction$ | async" />
+      }
     }
     <!-- @if (roundTripService.routeInfoComponent | async) {
       <ng-container *ngTemplateOutlet="roundTripService.routeInfoComponent | async" />

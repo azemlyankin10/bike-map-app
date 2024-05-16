@@ -18,7 +18,7 @@ interface RouteSummary {
   duration: number;
 }
 
-interface Route {
+export interface INavigateRoute {
   summary: RouteSummary;
   segments: RouteSegment[];
   geometry: string;
@@ -58,5 +58,5 @@ interface Metadata {
 export interface IRouteResponse {
   metadata: Metadata;
   bbox: number[];
-  routes: Route[];
+  routes: INavigateRoute[];
 }

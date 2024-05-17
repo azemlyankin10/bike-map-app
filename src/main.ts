@@ -7,7 +7,8 @@ import { routes } from './app/app.routes';
 import { AppComponent } from './app/app.component';
 import { environment } from './environments/environment';
 import { ServiceWorkerModule, provideServiceWorker } from '@angular/service-worker';
-import { provideHttpClient, withFetch, withInterceptorsFromDi } from '@angular/common/http';
+import { HTTP_INTERCEPTORS, provideHttpClient, withFetch, withInterceptorsFromDi } from '@angular/common/http';
+import { MyHttpInterceptor } from './app/_interceptors/http.interceptor';
 
 // ServiceWorkerModule.register('ngsw-worker.js', { enabled: environment.production })
 
@@ -18,6 +19,7 @@ if (environment.production) {
 bootstrapApplication(AppComponent, {
   providers: [
     { provide: RouteReuseStrategy, useClass: IonicRouteStrategy },
+    { provide: HTTP_INTERCEPTORS, useClass: MyHttpInterceptor, multi: true },
     provideIonicAngular(),
     provideRouter(routes),
     provideHttpClient(withFetch(), withInterceptorsFromDi()),

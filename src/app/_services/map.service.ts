@@ -6,7 +6,7 @@ import { GeoApiService, TDirectionApiOptions } from './api/geo.api.service';
 import { showNativeDialog } from '../helpers/methods/native';
 import { CircleMarker, Map, Marker, circleMarker, divIcon, marker } from 'leaflet';
 import { INavigateRoute } from '../_models/routeResponse';
-let deleteMe: any = []
+// let deleteMe: any = []
 @Injectable({
   providedIn: 'root'
 })
@@ -42,50 +42,50 @@ export class MapService {
   subscribeToCurrentLocation$() {
     // ///
     // TODO: delete this
-    let latitude = 51.0459008;
-    let longitude = 4.3399518;
-    let watchId = 0;
-    return interval(1000).pipe(
-      tap(() => {
-        // // latitude+=getRandomNumber(-0.0001, -0.0005);
-        // // longitude+=getRandomNumber(-0.0001, -0.0005);
-        // latitude+= 0.0001;
-        // longitude+= 0.0001;
-        const cords = deleteMe[watchId]
-        if (!cords) return;
-        latitude = cords[0]
-        longitude = cords[1]
-        watchId++;
-      }),
-      switchMap(() => {
-        return of({ coords: { latitude, longitude } } as Position)
-      }),
+    // let latitude = 51.0459008;
+    // let longitude = 4.3399518;
+    // let watchId = 0;
+    // return interval(1000).pipe(
+    //   tap(() => {
+    //     // // latitude+=getRandomNumber(-0.0001, -0.0005);
+    //     // // longitude+=getRandomNumber(-0.0001, -0.0005);
+    //     // latitude+= 0.0001;
+    //     // longitude+= 0.0001;
+    //     const cords = deleteMe[watchId]
+    //     if (!cords) return;
+    //     latitude = cords[0]
+    //     longitude = cords[1]
+    //     watchId++;
+    //   }),
+    //   switchMap(() => {
+    //     return of({ coords: { latitude, longitude } } as Position)
+    //   }),
 
-    )
+    // )
     /////
-    // let watchId: string;
-    // return new Observable<Position>((observer) => {
-    //   Geolocation.watchPosition({ enableHighAccuracy: true }, (position, err) => {
-    //     // console.log(position);
+    let watchId: string;
+    return new Observable<Position>((observer) => {
+      Geolocation.watchPosition({ enableHighAccuracy: true }, (position, err) => {
+        // console.log(position);
 
-    //     // showNativeDialog({ message: JSON.stringify(position) })
-    //     if (err) {
-    //       observer.error(err);
-    //       return;
-    //     }
-    //     observer.next(position as Position);
-    //   }).then((id) => watchId = id);
+        // showNativeDialog({ message: JSON.stringify(position) })
+        if (err) {
+          observer.error(err);
+          return;
+        }
+        observer.next(position as Position);
+      }).then((id) => watchId = id);
 
-    //   return () => Geolocation.clearWatch({ id: watchId });
-    // });
+      return () => Geolocation.clearWatch({ id: watchId });
+    });
   }
 
   displayRoute(geometryLine: string) {
     const decoded = this._mapComponentReference?.decodePolyline(geometryLine);
     // TODO: delete this
     // needs to be deleted
-    console.log(decoded);
-    deleteMe = decoded;
+    // console.log(decoded);
+    // deleteMe = decoded;
     ///
     const polyline = this._mapComponentReference?.displayPolyline(decoded);
     const polylineDecorator = this._mapComponentReference?.addPolylineDecorator(polyline).addTo(this._mapComponentReference?.mapReference);

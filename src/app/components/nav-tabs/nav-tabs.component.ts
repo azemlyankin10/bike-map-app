@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+import { AsyncPipe, CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, OnInit, ViewChild, inject, signal, viewChild } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { IonTabBar, IonTabs, IonIcon, IonTabButton, IonLabel, IonSearchbar } from '@ionic/angular/standalone';
@@ -10,11 +10,12 @@ import { RoundTripControlsComponent } from 'src/app/home/round-trip-controls/rou
 import { RoundTripService } from 'src/app/home/round-trip-controls/round-trip.service';
 import { Subscription, timer } from 'rxjs';
 import { NavigationComponent } from '../navigation/navigation.component';
+import { RouteSummaryComponent } from '../route-summary/route-summary.component';
 
 @Component({
   selector: 'app-nav-tabs',
   standalone: true,
-  imports: [CommonModule, IonIcon, IonTabs, IonTabBar, IonTabButton, IonLabel, BottomSheetComponent, IonSearchbar, RoundTripControlsComponent, NavigationComponent],
+  imports: [IonIcon, IonTabs, IonTabBar, IonTabButton, IonLabel, BottomSheetComponent, IonSearchbar, RoundTripControlsComponent, NavigationComponent, AsyncPipe, RouteSummaryComponent],
   template: `
     <ion-tabs>
      <!-- @if (isShowNav()) { -->
@@ -43,13 +44,17 @@ import { NavigationComponent } from '../navigation/navigation.component';
     <!-- } -->
     </ion-tabs>
 
-    <app-bottom-sheet #bottomSheet [closeOnSwipe]="(appState.appState$ | async) === 'round-trip'" (closeSheet)="closeBottomSheet()">
-      @if ((appState.appState$ | async) === 'round-trip') {
-        <app-round-trip-controls />
-      } @else if ((appState.appState$ | async) === 'navigation') {
-        <app-navigation />
-      }
-    </app-bottom-sheet>
+    <!-- @if ((appState.appState$ | async) !== 'default') { -->
+      <app-bottom-sheet #bottomSheet [closeOnSwipe]="(appState.appState$ | async) === 'round-trip'" (closeSheet)="closeBottomSheet()">
+        @if ((appState.appState$ | async) === 'round-trip') {
+          <app-round-trip-controls />
+        } @else if ((appState.appState$ | async) === 'navigation') {
+          <app-navigation />
+        } @else if ((appState.appState$ | async) === 'summary') {
+          <app-route-summary />
+        }
+      </app-bottom-sheet>
+    <!-- } -->
   `,
   styleUrl: './nav-tabs.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -67,10 +72,12 @@ export class NavTabsComponent implements OnInit {
     let timeout!: Subscription
     this.appState.appState$.subscribe(state => {
       timeout?.unsubscribe()
-      if (['round-trip', 'navigation'].includes(state)) {
+      if (['round-trip', 'navigation', 'summary'].includes(state)) {
         timeout = timer(100).subscribe(() => {
           this.bottomSheet.open()
         })
+      } else {
+        this.bottomSheet?.hide()
       }
     })
   }

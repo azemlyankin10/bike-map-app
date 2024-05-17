@@ -8,6 +8,7 @@ import { getRandomNumber } from 'src/app/helpers/functions/getRandomNumber';
 import { ToastController } from '@ionic/angular';
 import { IRouteResponse } from 'src/app/_models/routeResponse';
 import { AppStateService } from 'src/app/_services/app-state.service';
+import { NavigationService } from 'src/app/components/navigation/navigation.service';
 
 @Injectable({
   providedIn: 'root'
@@ -15,7 +16,7 @@ import { AppStateService } from 'src/app/_services/app-state.service';
 export class RoundTripService {
   isSaveRouteVisible$ = new BehaviorSubject<boolean>(false)
   isSavedRouteViewVisible$ = new BehaviorSubject<boolean>(false)
-  constructor(private geoApi: GeoApiService, private mapService: MapService, private toastController: ToastController, private appState: AppStateService) {
+  constructor(private geoApi: GeoApiService, private mapService: MapService, private toastController: ToastController, private appState: AppStateService, private navigationService: NavigationService) {
     this.initGeneratingRoute()
     this.initInstructions()
   }
@@ -147,6 +148,7 @@ export class RoundTripService {
     if (!this.routeResponseData) return;
     console.log('Start navigation');
     this.appState.appState$.next('navigation')
+    this.navigationService.routeRef = { polyline: this.routeRef.polyline, polylineDecorator: this.routeRef.polylineDecorator }
     const steps = this.mapService.parseInstructionsAndReturnSteps(this.routeResponseData.routes[0])
     if (!steps) return;
     this.appState.routeInstructionSteps.set(steps)

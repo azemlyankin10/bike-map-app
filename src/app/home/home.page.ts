@@ -28,7 +28,7 @@ import { IRouteInstructionStep, StepInstructionBarComponent } from '../component
 export class HomePage implements OnInit, ViewDidEnter {
   IS_DESTROYED = destroyNotifier()
   appStateMode = signal('default')
-  currentNavInstruction$!: Observable<IRouteInstructionStep | null>
+  currentNavInstruction$!: Observable<IRouteInstructionStep | null | 'done'>
   // routeInstruction$!: any
   // isShowSearchMode = signal(false);
   // @ViewChild('bottomSheet') bottomSheet!: ElementRef

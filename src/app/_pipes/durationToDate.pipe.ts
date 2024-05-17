@@ -13,6 +13,8 @@ export class DurationToDatePipe implements PipeTransform {
     const seconds = Math.round(sec % 60);
     if (args[0] === 'formatTimeWithNames') {
       return `${hours}h ${minutes}m`;
+    } else if (args[0] === 'formatTimeWithNamesAndSeconds') {
+      return `${hours}h ${minutes}m ${seconds}s`;
     }
     return new Date(0, 0, 0, hours, minutes, seconds);
   }

@@ -5,7 +5,7 @@ import { navigateOutline, pauseOutline, playCircleOutline, stopCircleOutline } f
 import { NavigationService } from './navigation.service';
 import { AsyncPipe, DatePipe } from '@angular/common';
 import { destroyNotifier } from 'src/app/helpers/functions/destroyNotifier';
-import { Observable, takeUntil } from 'rxjs';
+import { Observable, takeUntil, tap } from 'rxjs';
 import { haptic } from 'src/app/helpers/methods/native';
 import { ImpactStyle } from '@capacitor/haptics';
 import { DistancePipe } from 'src/app/_pipes/distance.pipe';
@@ -29,6 +29,7 @@ export class NavigationComponent implements OnInit {
   traveledDistance$!: Observable<number>
   currentSpeed$!: Observable<string>
   averageSpeed$!: Observable<string>
+  storeLastMeasurement = { elapsedTime: 0, traveledDistance: 0, averageSpeed: '' }
 
 
   ngOnInit() {
@@ -38,10 +39,10 @@ export class NavigationComponent implements OnInit {
       haptic(ImpactStyle.Medium)
     })
     /// measuring
-    this.elapsedTime$ = this.navigationCommunication.measuringService.elapsedTime$().pipe(takeUntil(this.IS_DESTROYED))
-    this.traveledDistance$ = this.navigationCommunication.measuringService.traveledDistance$().pipe(takeUntil(this.IS_DESTROYED))
+    this.elapsedTime$ = this.navigationCommunication.measuringService.elapsedTime$().pipe(takeUntil(this.IS_DESTROYED), tap((time) => this.storeLastMeasurement.elapsedTime = time))
+    this.traveledDistance$ = this.navigationCommunication.measuringService.traveledDistance$().pipe(takeUntil(this.IS_DESTROYED), tap((distance) => this.storeLastMeasurement.traveledDistance = distance))
     this.currentSpeed$ = this.navigationCommunication.measuringService.currentSpeed$().pipe(takeUntil(this.IS_DESTROYED))
-    this.averageSpeed$ = this.navigationCommunication.measuringService.averageSpeed$().pipe(takeUntil(this.IS_DESTROYED))
+    this.averageSpeed$ = this.navigationCommunication.measuringService.averageSpeed$().pipe(takeUntil(this.IS_DESTROYED), tap((speed) => this.storeLastMeasurement.averageSpeed = speed))
     this.navigationCommunication.measuringService.control('start') /// start timer
 
     // // trace user location
@@ -61,6 +62,12 @@ export class NavigationComponent implements OnInit {
       // mapComponent.mapReference?.on('zoomstart', () => {
       //   this.navigationCommunication.isMapTouched.set(true)
       // })
+    })
+
+    // destroy component
+    this.IS_DESTROYED.subscribe(() => {
+      // additional actions in the navigation service - stop method
+      this.navigationCommunication.routeSummaryService.measuring$.next(this.storeLastMeasurement)
     })
   }
 

@@ -9,7 +9,7 @@
       </ion-segment-button>
     </ion-segment>
   </ion-toolbar> -->
-  <ion-toolbar [ngStyle]="{ '--background': appStateMode() === 'default' ? 'transparent' : '#374151'}">
+  <ion-toolbar [ngStyle]="{ '--background': ['default', 'summary'].includes(appStateMode()) ? 'transparent' : '#374151'}">
     @switch (appStateMode()) {
       @case ('default') {
         <div class="tw-pt-3">

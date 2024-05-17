@@ -29,7 +29,7 @@ export class MeasuringService {
         this.isPaused$.next(false);
         break;
       case 'stop':
-        this._elapsedTime = 0;
+        // this._elapsedTime = 0;
         this.isPaused$.next(true);
         break;
     }

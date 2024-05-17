@@ -1,4 +1,4 @@
-import { CommonModule, NgTemplateOutlet } from '@angular/common';
+import { AsyncPipe, CommonModule, NgTemplateOutlet } from '@angular/common';
 import { AfterViewInit, Attribute, ChangeDetectionStrategy, Component, ElementRef, EventEmitter, Input, OnInit, Output, ViewChild, effect, inject, signal } from '@angular/core';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import { Capacitor } from '@capacitor/core';
@@ -12,7 +12,7 @@ import { destroyNotifier } from 'src/app/helpers/functions/destroyNotifier';
 @Component({
   selector: 'app-bottom-sheet',
   standalone: true,
-  imports: [CommonModule],
+  imports: [NgTemplateOutlet, AsyncPipe],
   template: `
     <div class="additionalSection" #additionalSection>
       <ng-container *ngTemplateOutlet="bottomSheetService.subsection | async" />

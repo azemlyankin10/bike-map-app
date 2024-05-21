@@ -1,0 +1,17 @@
+1) create free mode
+  - user rides whenever he wants
+  - trace the user's path
+  - measurement
+  - saving the route
+
+2) saving history
+
+3) fix navigation
+  - behavior if the user goes to the wrong direction
+  - voice accompany
+
+4) awards system
+
+5) profile
+  - auth page
+  - user needs to set up data for measurement (weight, ...)
